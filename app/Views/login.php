@@ -92,7 +92,7 @@
 <body>
     <form action="<?= base_url('auth/login') ?>" method="post">
         <h2>Login</h2>
-        
+
         <?php if (session()->getFlashdata('error')): ?>
             <div class="error">
                 <?= session()->getFlashdata('error') ?>
@@ -101,12 +101,22 @@
 
         <div>
             <label for="email">Email:</label>
-            <input type="email" name="email" id="email" required>
+            <input type="email" name="email" id="email">
+            <?php if (isset($validation)) { ?>
+                <h6>
+                    <small class="error-message" style="color: red;"><?= $validation->getError('email') ?></small>
+                </h6>
+            <?php } ?>
         </div>
 
         <div>
             <label for="password">Password:</label>
-            <input type="password" name="password" id="password" required>
+            <input type="password" name="password" id="password">
+            <?php if (isset($validation)) { ?>
+                <h6>
+                    <small class="error-message" style="color: red;"><?= $validation->getError('password') ?></small>
+                </h6>
+            <?php } ?>
         </div>
 
         <div>
