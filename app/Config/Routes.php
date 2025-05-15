@@ -6,12 +6,12 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 $routes->get('/', 'Home::index');
-// $routes->get('/users', 'DashboardController::index'); // Ensure this matches your controller name
+$routes->get('/dashboard', 'DashboardController::index', ['filter' => 'auth']); // Ensure this matches your controller name
 $routes->get('/auth', 'Auth::index'); // The login page
 $routes->post('/auth/login', 'Auth::login'); // Process login form
 $routes->get('/auth/logout', 'Auth::logout'); // Process logout
 
-$routes->group('/users', function($routes) {
+$routes->group('/users',['filter' => 'auth'], function($routes) {
     $routes->get('', 'UserController::index'); // List users
     $routes->get('create', 'UserController::create'); // Form to create a new user
     $routes->post('store', 'UserController::store'); // Handle new user submission
@@ -29,7 +29,7 @@ $routes->group('/users', function($routes) {
 //     $routes->get('delete/(:num)', 'SkillController::delete/$1'); // Handle skill deletion
 // });
 
-$routes->group('user_skills', function($routes) {
+$routes->group('user_skills',['filter' => 'auth'], function($routes) {
     try{
         $routes->get('', 'UserSkillController::index'); // List user skills
         $routes->get('create', 'UserSkillController::create'); // Form to create a new user skill
