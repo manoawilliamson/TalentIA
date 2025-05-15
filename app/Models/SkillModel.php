@@ -15,4 +15,12 @@ class SkillModel extends Model
         'name' => 'required|max_length[255]',
         'category' => 'max_length[100]',
     ];
+
+    public function check_if_already_exist($name, $category)
+    {
+        $sql = "SELECT * FROM skills WHERE name = ? AND category = ?";
+        $query = $this->db->query($sql, [$name, $category]);
+
+        return $query->getResult();
+    }
 }

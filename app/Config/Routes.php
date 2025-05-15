@@ -20,14 +20,14 @@ $routes->group('/users',['filter' => 'auth'], function($routes) {
     $routes->get('delete/(:num)', 'UserController::delete/$1'); // Handle user deletion
 });
 
-// $routes->group('skills', function($routes) {
-//     $routes->get('', 'SkillController::index'); // List skills
-//     $routes->get('create', 'SkillController::create'); // Form to create a new skill
-//     $routes->post('store', 'SkillController::store'); // Handle new skill submission
-//     $routes->get('edit/(:num)', 'SkillController::edit/$1'); // Form to edit skill
-//     $routes->post('update/(:num)', 'SkillController::update/$1'); // Handle skill update
-//     $routes->get('delete/(:num)', 'SkillController::delete/$1'); // Handle skill deletion
-// });
+$routes->group('skills',['filter' => 'auth'], function($routes) {
+    $routes->get('', 'SkillController::index'); // List skills
+    $routes->get('create', 'SkillController::create'); // Form to create a new skill
+    $routes->post('store', 'SkillController::store'); // Handle new skill submission
+    $routes->get('edit/(:num)', 'SkillController::edit/$1'); // Form to edit skill
+    $routes->post('update/(:num)', 'SkillController::update/$1'); // Handle skill update
+    $routes->get('delete/(:num)', 'SkillController::delete/$1'); // Handle skill deletion
+});
 
 $routes->group('user_skills',['filter' => 'auth'], function($routes) {
     try{
