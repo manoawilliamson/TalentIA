@@ -225,6 +225,7 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <a href="#">Dashboard</a>
+        <a href="projects">Projects</a>
         <a href="users">Users</a>
         <a href="skills">Skills</a>
         <a href="user_skills">User's skills</a>
