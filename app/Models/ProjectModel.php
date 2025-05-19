@@ -6,16 +6,17 @@ use CodeIgniter\Model;
 
 class ProjectModel extends Model{
 
-    protected $table = 'projects';
+    protected $table = 'project';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['name', 'description', 'created_at', 'updated_at'];
+    protected $allowedFields = ['name', 'description','datebegin','dateend','nbrperson','remark','file', 'created_at', 'updated_at'];
 
     // Optional: You can define validation rules if needed
-    protected $validationRules = [
-        'name' => 'required|max_length[255]',
-        'description' => 'max_length[100]',
-    ];
+    // protected $validationRules = [
+    //     'name' => 'required|max_length[255]',
+    //     'description' => 'max_length[100]',
+    // ];
 
+protected $useTimestamps = true; 
 
     function getActiveSkills($idProjet){
         // mila dinihana le requete
@@ -61,14 +62,6 @@ class ProjectModel extends Model{
     }
 
 }
-
-
-
-
-
-
-
-
 
 
 

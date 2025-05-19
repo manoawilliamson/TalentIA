@@ -29,6 +29,17 @@ $routes->group('skills',['filter' => 'auth'], function($routes) {
     $routes->get('delete/(:num)', 'SkillController::delete/$1'); // Handle skill deletion
 });
 
+$routes->group('projects',['filter' => 'auth'], function($routes) {
+    $routes->get('', 'ProjectController::index'); // List projects
+    $routes->get('create', 'ProjectController::create'); // Fskillorm to create a project 
+    $routes->post('store', 'ProjectController::store'); // Handle new project submission
+    $routes->get('edit/(:num)', 'ProjectController::edit/$1'); // Form to edit project
+    $routes->post('update/(:num)', 'ProjectController::update/$1'); // Handle project update
+    $routes->get('delete/(:num)', 'ProjectController::delete/$1'); // Handle project deletion
+    $routes->get('fiche/(:num)', 'ProjectController::detail/$1'); // Handle project deletion
+    $routes->get('download/(:segment)', 'ProjectController::download/$1');
+});
+
 $routes->group('user_skills',['filter' => 'auth'], function($routes) {
     try{
         $routes->get('', 'UserSkillController::index'); // List user skills
