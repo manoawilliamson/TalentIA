@@ -40,6 +40,12 @@ $routes->group('projects',['filter' => 'auth'], function($routes) {
     $routes->get('download/(:segment)', 'ProjectController::download/$1');
 });
 
+$routes->group('projectskills', ['filter' => 'auth'], function($routes) {;
+    $routes->get('create/(:num)', 'ProjectSkillsController::index/$1');
+    $routes->post('store', 'ProjectSkillsController::store');
+});
+
+
 $routes->group('user_skills',['filter' => 'auth'], function($routes) {
     try{
         $routes->get('', 'UserSkillController::index'); // List user skills
