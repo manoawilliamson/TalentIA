@@ -3,9 +3,8 @@
 namespace App\Controllers;
 
 use App\Models\ProjectModel;
+use App\Models\V_ProjectSkillsModel;
 use CodeIgniter\Controller;
-use Kreait\Firebase\Factory;
-use Kreait\Firebase\Storage;
 
 
 class ProjectController extends Controller
@@ -208,7 +207,10 @@ class ProjectController extends Controller
     {
         $projectModel = new ProjectModel();
         $project = $projectModel->find($id);
-        return view('projects/fiche', ['project' => $project]);
+
+        $v_projectSkillsModel = new V_ProjectSkillsModel();
+        $data = $v_projectSkillsModel->getSkillsForProject( $id);
+        return view('projects/fiche', ['project' => $project, 'proskills' => $data]);
     }
 
     public function delete($id)

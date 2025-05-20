@@ -136,6 +136,28 @@
                 <td>Remarks</td>
                 <td><?= esc($project['remark']) ?></td>
             </tr>
+            <?php if (!empty($proskills)): ?>
+                <tr>
+                    <td>Skills needs</td>
+                    <td>
+                        <ul style="margin: 0; padding-left: 20px;">
+                            <?php foreach ($proskills as $skillRecord): ?>
+                                <?php if (!empty($skillRecord['skill'])): ?>
+                                    <li><?= esc($skillRecord['skill']) ?> - <?= esc($skillRecord['noteskills']) ?></li>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </ul>
+                        <div style="text-align: right; margin-top: 5px;">
+                            <a href="<?= base_url('projectskills/list/' . $project['id']) ?>" style="font-size: 0.85em; color: #666; text-decoration: none; font-style: italic;">
+                                ✎ Edit Skills
+                            </a>
+                        </div>
+
+                    </td>
+                </tr>
+            <?php endif; ?>
+
+
             <?php if (!empty($project['file'])): ?>
                 <tr>
                     <td>Fichier</td>
@@ -145,7 +167,7 @@
         </table>
 
         <div class="actions">
-            <a href="<?= base_url('projects/skills/add/' . $project['id']) ?>" class="btn add-skills-btn">Add Skills</a>
+            <a href="<?= base_url('projectskills/create/' . $project['id']) ?>" class="btn add-skills-btn">Add Skills</a>
             <a href="<?= base_url('projects/delete/' . $project['id']) ?>"
                 class="btn delete-btn"
                 onclick="return confirm('Are you sure you want to delete this project?');">
