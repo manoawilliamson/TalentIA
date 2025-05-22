@@ -48,7 +48,19 @@ $routes->group('projectskills', ['filter' => 'auth'], function($routes) {;
     $routes->get('delete/(:num)/(:segment)', 'ProjectSkillsController::delete/$1/$2');
     $routes->post('update/(:num)', 'ProjectSkillsController::updateSkill/$1'); // Handle skill update
 
+});
+$routes->group('person', ['filter' => 'auth'], function($routes) {;
+    $routes->get('', 'PersonController::index');
+    $routes->get('create', 'PersonController::create');
+    $routes->post('store', 'PersonController::store'); 
+    $routes->get('edit/(:num)', 'PersonController::edit/$1');
+    $routes->post('update/(:num)', 'PersonController::update/$1');
+    $routes->get('delete/(:num)', 'PersonController::delete/$1'); 
+    $routes->get('fiche/(:num)', 'PersonController::detail/$1'); // Handle project deletion
+});
 
+$routes->group('personskills', ['filter' => 'auth'], function($routes) {;
+    $routes->get('create/(:num)', 'PersonSkillsController::index/$1');
 });
 
 

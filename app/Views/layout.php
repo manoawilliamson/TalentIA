@@ -228,7 +228,7 @@
         <a href="projects">Projects</a>
         <a href="users">Users</a>
         <a href="skills">Skills</a>
-        <a href="user_skills">User's skills</a>
+        <a href="person">Person</a>
         <a href="#">Help</a>
     </div>
 
