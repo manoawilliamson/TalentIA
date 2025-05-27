@@ -17,7 +17,7 @@ const SignIn: React.FC = () => {
 
     const formData = new FormData(event.target);
     const data = {
-      "mail" : formData.get('mail'),
+      "email" : formData.get('email'),
       "password" : formData.get('password')
     };
 
