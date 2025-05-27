@@ -34,8 +34,8 @@ const ProjetList = ( {reload, enableUpdate} : ProjetListProps ) => {
     useEffect( () => {
         const fetchData = async () => {
             setIsLoading(true);
-            const skills = await getProjects();
-            setData(skills);
+            const response = await getProjects();
+            setData(response.projects);
             setIsLoading(false);
         };
         fetchData();

@@ -117,9 +117,9 @@ $routes->group('api', function($routes) {
     });
 
      $routes->group('projects', function($routes){
-        $routes->get('/', 'Api\ProjectController::index');              
+        $routes->get('/', 'ProjectController::index');              
         $routes->get('(:num)', 'Api\ProjectController::show/$1');       
-        $routes->post('/', 'Api\ProjectController::create');            
+        $routes->post('/', 'ProjectController::store');            
         $routes->put('(:num)', 'Api\ProjectController::update/$1');     
         $routes->delete('(:num)', 'Api\ProjectController::delete/$1');  
     });

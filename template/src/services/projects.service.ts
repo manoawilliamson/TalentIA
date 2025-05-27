@@ -6,25 +6,23 @@ import { getSkills } from "./Skills.service";
 const getProjects = async () : Promise<Projet[]> => {
 
     const url = `${BASE_URL}/projects`;
-
     const result = await axios.get<Projet[]>(url);
 
     return result.data;
 
 };
 
-const addProject = async ( skill: Projet ) => {
+const addProject = async (formData: FormData) => {
     const url = `${BASE_URL}/projects`;
-    
-    const result = await axios.post(url, skill, {
+
+    const result = await axios.post(url, formData, {
         headers: {
-            "Content-Type": "application/json"
+            "Accept": "application/json"
         }
     });
 
     return result.data;
 };
-
 
 const updateProject = async ( skill: Projet ) => {
     const url = `${BASE_URL}/projects/${skill.id}`;

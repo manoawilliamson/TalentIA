@@ -13,8 +13,8 @@ class ProjectController extends Controller
     public function index()
     {
         $projectModel = new ProjectModel();
-        $data['projects'] = $projectModel->findAll();
-        return view('projects/list', $data);
+        $data = $projectModel->findAll();
+        return $this->response->setJSON(['projects' => $data]);
     }
 
     public function create()
@@ -22,88 +22,92 @@ class ProjectController extends Controller
         return view('projects/create');  // Load create skill form
     }
 
-    public function store()
-    {
-        if ($this->request->getMethod(true) === 'POST') {
-            $rules = [
-                'name' => 'required',
-                'description' => 'required',
-                'datebegin' => 'required',
-                'dateend' => 'required',
-                'nbrperson' => 'required|integer|greater_than[0]',
-                'remark' => 'required'
-                // 'file' => 'required'
+public function store()
+{
+    if ($this->request->getMethod(true) === 'POST') {
+        $rules = [
+            'name' => 'required',
+            'description' => 'required',
+            'datebegin' => 'required',
+            'dateend' => 'required',
+            'nbrperson' => 'required|integer|greater_than[0]',
+            'remark' => 'required'
+        ];
 
-            ];
-            $errors = [
-                'name' => [
-                    'required' => "Champ name ne doit pas etre vide"
-                ],
-                'description' => [
-                    'required' => "Champ description ne doit pas etre vide"
-                ],
-                'datebegin' => [
-                    'required' => "Champ date begin  ne doit pas etre vide",
-                    'valid_date' => "Date begin doit être valide et au format mm/jj/aaaa"
-                ],
-                'dateend' => [
-                    'required' => "Champ date end ne doit pas etre vide",
-                    'valid_date' => "Date end doit être valide et au format mm/jj/aaaa"
-                ],
-                'nbrperson' => [
-                    'required' => "Champ number person ne doit pas etre vide",
-                    'integer' => "Number person doit être un nombre entier",
-                    'greater_than' => "Number person doit être un nombre entier positif"
-                ],
-                'remark' => [
-                    'required' => "Champ remarque ne doit pas etre vide"
-                ]
-                // 'file' => [
-                //     'required' => "Champ file ne doit pas etre vide"
-                // ]
-            ];
-            if (!$this->validate($rules, $errors)) {
-                return view('projects/create', [
-                    "validation" => $this->validator,
-                ]);
+        if (!$this->validate($rules)) {
+            // Si c'est une requête AJAX/API (React), retourne JSON
+            if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
+                return $this->response->setStatusCode(422)
+                    ->setJSON(['errors' => $this->validator->getErrors()]);
             }
-
-            try {
-                $projectModel = new ProjectModel();
-                $file = $this->request->getFile('file');
-                $newName = null;
-                if ($file->getSize() > 2097152) { // 2MB max
-                    return redirect()->back()->with('error', 'Fichier trop volumineux');
-                }
-                if ($file->isValid() && !$file->hasMoved()) {
-                    $newName = $file->getRandomName();
-                    $file->move(WRITEPATH . 'uploads', $newName);
-                }
-
-                // No need to format dates - HTML date input already sends Y-m-d format
-                $data = [
-                    'name' => $this->request->getPost('name'),
-                    'description' => $this->request->getPost('description'),
-                    'datebegin' => $this->request->getPost('datebegin'), // match form field name
-                    'dateend' => $this->request->getPost('dateend'),     // match form field name
-                    'nbrperson' => $this->request->getPost('nbrperson'), // match form field name
-                    'remark' => $this->request->getPost('remark'),
-                    'file' => $newName,
-                ];
-
-                $projectModel->insert($data);
-
-                return redirect()->to(base_url('projects'));
-            } catch (\Exception $e) {
-                return view('projects/create', [
-                    "validation" => $this->validator,
-                    "error" => $e->getMessage()
-                ]);
-            }
+            // Sinon, retourne la vue classique avec erreurs
+            return view('projects/create', [
+                "validation" => $this->validator,
+            ]);
         }
 
-        return redirect()->to(base_url('projects'));
+        try {
+            $projectModel = new ProjectModel();
+            $file = $this->request->getFile('file');
+            $newName = null;
+
+            if ($file && $file->isValid() && !$file->hasMoved()) {
+                if ($file->getSize() > 2097152) { // 2MB max
+                    $errorMsg = 'Fichier trop volumineux';
+                    if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
+                        return $this->response->setStatusCode(400)
+                            ->setJSON(['error' => $errorMsg]);
+                    }
+                    return redirect()->back()->with('error', $errorMsg);
+                }
+                $newName = $file->getRandomName();
+                $file->move(WRITEPATH . 'uploads', $newName);
+            }
+
+            $data = [
+                'name' => $this->request->getPost('name'),
+                'description' => $this->request->getPost('description'),
+                'datebegin' => $this->request->getPost('datebegin'),
+                'dateend' => $this->request->getPost('dateend'),
+                'nbrperson' => $this->request->getPost('nbrperson'),
+                'remark' => $this->request->getPost('remark'),
+                'file' => $newName,
+            ];
+
+            if (!$projectModel->insert($data)) {
+                $errorMsg = 'Erreur lors de l\'insertion';
+                if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
+                    return $this->response->setStatusCode(500)
+                        ->setJSON(['error' => $errorMsg]);
+                }
+                return view('projects/create', [
+                    "validation" => $this->validator,
+                    "error" => $errorMsg
+                ]);
+            }
+
+            // Succès : JSON pour API, redirect pour HTML
+            if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
+                return $this->response->setStatusCode(201)
+                    ->setJSON(['success' => true, 'project' => $data]);
+            }
+            return redirect()->to(base_url('projects'));
+        } catch (\Throwable $e) {
+            $errorMsg = $e->getMessage();
+            if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
+                return $this->response->setStatusCode(500)
+                    ->setJSON(['error' => $errorMsg]);
+            }
+            return view('projects/create', [
+                "validation" => $this->validator,
+                "error" => $errorMsg
+            ]);
+        }
     }
+
+    // Si ce n'est pas un POST, retourne la vue classique
+    return view('projects/create');
+}
 
     public function download($filename)
     {
@@ -209,7 +213,7 @@ class ProjectController extends Controller
         $project = $projectModel->find($id);
 
         $v_projectSkillsModel = new V_ProjectSkillsModel();
-        $data = $v_projectSkillsModel->getSkillsForProject( $id);
+        $data = $v_projectSkillsModel->getSkillsForProject($id);
         return view('projects/fiche', ['project' => $project, 'proskills' => $data]);
     }
 
