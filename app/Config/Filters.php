@@ -3,7 +3,6 @@
 namespace Config;
 
 use CodeIgniter\Config\Filters as BaseFilters;
-use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
 use CodeIgniter\Filters\DebugToolbar;
 use CodeIgniter\Filters\ForceHTTPS;
@@ -30,11 +29,11 @@ class Filters extends BaseFilters
         'honeypot'      => Honeypot::class,
         'invalidchars'  => InvalidChars::class,
         'secureheaders' => SecureHeaders::class,
-        'cors'          => Cors::class,
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
-        'auth' => \App\Filters\AuthFilters::class,
+        'auth'          => \App\Filters\AuthFilters::class,
+        'cors'          => \App\Filters\CorsFilter::class, // <-- GARDE UNIQUEMENT CELLE-CI
     ];
 
     /**
@@ -54,7 +53,7 @@ class Filters extends BaseFilters
         'before' => [
             'forcehttps', // Force Global Secure Requests
             'pagecache',  // Web Page Caching
-            'cors', // CORS Filter
+            // 'cors', <-- ENLÈVE 'cors' D'ICI
         ],
         'after' => [
             'pagecache',   // Web Page Caching
@@ -71,12 +70,12 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
-            'cors', // Ajoute le filtre CORS ici
+            'cors', // Applique le filtre CORS globalement
             // ... autres filtres
         ],
         'after' => [
             'toolbar',
-            'cors', // Ajoute également dans les filtres après
+            'cors', // Applique également après la réponse
             // ... autres filtres
         ],
     ];
