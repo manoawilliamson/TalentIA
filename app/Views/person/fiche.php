@@ -88,6 +88,14 @@
     .add-skills-btn:hover {
         background-color: #4cae4c;
     }
+    .history:hover {
+        background-color:rgb(55, 53, 62);
+    }
+    .history {
+        background-color:rgb(55, 53, 62);
+        margin-right: 10px;
+
+    }
 
     .delete-btn {
         background-color: #d9534f;
@@ -155,6 +163,7 @@
         </table>
 
         <div class="actions">
+            <a href="<?= base_url('personskills/history/' . $person['id']) ?>" class="btn history">History</a>
             <a href="<?= base_url('personskills/create/' . $person['id']) ?>" class="btn add-skills-btn">Add Skills</a>
             <a href="<?= base_url('person/delete/' . $person['id']) ?>"
                 class="btn delete-btn"

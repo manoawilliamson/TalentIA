@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\PersonModel;
 use App\Models\PersonSkillsModel;
 use CodeIgniter\Controller;
 use App\Models\SkillModel;
@@ -67,5 +68,18 @@ class PersonSkillsController extends Controller
             ]);
         }
     }
+    public function history($id)
+    {
+        $personModel = new PersonModel();
+        $person = $personModel->find($id);
 
+        $v_personSkillsModel = new V_PersonSkillsModel();
+        $data = [
+            'person' => $person,
+            'personskills' => $v_personSkillsModel->getHistorySkillsPerson($id),
+            'monthlyAverages' => $v_personSkillsModel->getMonthlySkillAverages($id)
+        ];
+        // var_dump($data);
+        return view('person/history', $data);
+    }
 }

@@ -213,4 +213,5 @@ class PersonController extends Controller
         // var_dump($data);
         return view('person/fiche', ['person' => $person, 'personskills' => $data]);
     }
+    
 }

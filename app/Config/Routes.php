@@ -6,37 +6,37 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 $routes->get('/', 'Home::index');
-$routes->get('/dashboard', 'DashboardController::index', ['filter' => 'auth']); // Ensure this matches your controller name
-$routes->get('/auth', 'Auth::index'); // The login page
-$routes->post('/auth/login', 'Auth::login'); // Process login form
-$routes->get('/auth/logout', 'Auth::logout'); // Process logout
+$routes->get('/dashboard', 'DashboardController::index', ['filter' => 'auth']); 
+$routes->get('/auth', 'Auth::index'); 
+$routes->post('/auth/login', 'Auth::login'); 
+$routes->get('/auth/logout', 'Auth::logout');
 
 $routes->group('/users',['filter' => 'auth'], function($routes) {
-    $routes->get('', 'UserController::index'); // List users
-    $routes->get('create', 'UserController::create'); // Form to create a new user
-    $routes->post('store', 'UserController::store'); // Handle new user submission
-    $routes->get('edit/(:num)', 'UserController::edit/$1'); // Form to edit user
-    $routes->post('update/(:num)', 'UserController::update/$1'); // Handle user update
-    $routes->get('delete/(:num)', 'UserController::delete/$1'); // Handle user deletion
+    $routes->get('', 'UserController::index');
+    $routes->get('create', 'UserController::create');
+    $routes->post('store', 'UserController::store');
+    $routes->get('edit/(:num)', 'UserController::edit/$1');
+    $routes->post('update/(:num)', 'UserController::update/$1');
+    $routes->get('delete/(:num)', 'UserController::delete/$1'); 
 });
 
 $routes->group('skills',['filter' => 'auth'], function($routes) {
-    $routes->get('', 'SkillController::index'); // List skills
-    $routes->get('create', 'SkillController::create'); // Form to create a new skill
-    $routes->post('store', 'SkillController::store'); // Handle new skill submission
-    $routes->get('edit/(:num)', 'SkillController::edit/$1'); // Form to edit skill
-    $routes->post('update/(:num)', 'SkillController::update/$1'); // Handle skill update
-    $routes->get('delete/(:num)', 'SkillController::delete/$1'); // Handle skill deletion
+    $routes->get('', 'SkillController::index'); 
+    $routes->get('create', 'SkillController::create');
+    $routes->post('store', 'SkillController::store');
+    $routes->get('edit/(:num)', 'SkillController::edit/$1'); 
+    $routes->post('update/(:num)', 'SkillController::update/$1');
+    $routes->get('delete/(:num)', 'SkillController::delete/$1');
 });
 
 $routes->group('projects',['filter' => 'auth'], function($routes) {
-    $routes->get('', 'ProjectController::index'); // List projects
-    $routes->get('create', 'ProjectController::create'); // Fskillorm to create a project 
-    $routes->post('store', 'ProjectController::store'); // Handle new project submission
-    $routes->get('edit/(:num)', 'ProjectController::edit/$1'); // Form to edit project
-    $routes->post('update/(:num)', 'ProjectController::update/$1'); // Handle project update
-    $routes->get('delete/(:num)', 'ProjectController::delete/$1'); // Handle project deletion
-    $routes->get('fiche/(:num)', 'ProjectController::detail/$1'); // Handle project deletion
+    $routes->get('', 'ProjectController::index'); 
+    $routes->get('create', 'ProjectController::create'); 
+    $routes->post('store', 'ProjectController::store'); 
+    $routes->get('edit/(:num)', 'ProjectController::edit/$1');
+    $routes->post('update/(:num)', 'ProjectController::update/$1');
+    $routes->get('delete/(:num)', 'ProjectController::delete/$1');
+    $routes->get('fiche/(:num)', 'ProjectController::detail/$1');
     $routes->get('download/(:segment)', 'ProjectController::download/$1');
 });
 
@@ -46,9 +46,10 @@ $routes->group('projectskills', ['filter' => 'auth'], function($routes) {;
     $routes->post('store', 'ProjectSkillsController::store');
     $routes->get('edit/(:num)/(:segment)', 'ProjectSkillsController::edit/$1/$2');
     $routes->get('delete/(:num)/(:segment)', 'ProjectSkillsController::delete/$1/$2');
-    $routes->post('update/(:num)', 'ProjectSkillsController::updateSkill/$1'); // Handle skill update
+    $routes->post('update/(:num)', 'ProjectSkillsController::updateSkill/$1');
 
 });
+
 $routes->group('person', ['filter' => 'auth'], function($routes) {;
     $routes->get('', 'PersonController::index');
     $routes->get('create', 'PersonController::create');
@@ -56,29 +57,35 @@ $routes->group('person', ['filter' => 'auth'], function($routes) {;
     $routes->get('edit/(:num)', 'PersonController::edit/$1');
     $routes->post('update/(:num)', 'PersonController::update/$1');
     $routes->get('delete/(:num)', 'PersonController::delete/$1'); 
-    $routes->get('fiche/(:num)', 'PersonController::detail/$1'); // Handle project deletion
+    $routes->get('fiche/(:num)', 'PersonController::detail/$1');
 });
 
 $routes->group('personskills', ['filter' => 'auth'], function($routes) {;
     $routes->get('create/(:num)', 'PersonSkillsController::index/$1');
+    $routes->get('history/(:num)', 'PersonSkillsController::history/$1');
+    $routes->get('graphhistory/(:num)', 'PersonSkillsController::graphhistory/$1');
+});
+
+$routes->group('personproject', ['filter' => 'auth'], function($routes) {;
+    $routes->get('', 'PersonProjectController::index');
+    $routes->get('create', 'PersonProjectController::store');
 });
 
 
 $routes->group('user_skills',['filter' => 'auth'], function($routes) {
     try{
-        $routes->get('', 'UserSkillController::index'); // List user skills
-        $routes->get('create', 'UserSkillController::create'); // Form to create a new user skill
-        $routes->post('store', 'UserSkillController::store'); // Handle new user skill submission
-        $routes->get('edit/(:num)', 'UserSkillController::edit/$1'); // Form to edit user skill
-        $routes->post('update/(:num)', 'UserSkillController::update/$1'); // Handle user skill update
-        $routes->get('delete/(:num)', 'UserSkillController::delete/$1'); // Handle user skill deletion
-        $routes->get('test', 'UserSkillController::test_user_skills'); // Handle user skill deletion
+        $routes->get('', 'UserSkillController::index'); 
+        $routes->get('create', 'UserSkillController::create'); 
+        $routes->post('store', 'UserSkillController::store'); 
+        $routes->get('edit/(:num)', 'UserSkillController::edit/$1'); 
+        $routes->post('update/(:num)', 'UserSkillController::update/$1');
+        $routes->get('delete/(:num)', 'UserSkillController::delete/$1');
+        $routes->get('test', 'UserSkillController::test_user_skills');
     }catch(\Exception $e){
         var_dump($e);
     }
 });
 
-// API routes (if applicable)
 $routes->group('api', function($routes) {
     $routes->options('(:any)', static function () {
         $response = service('response');
@@ -93,19 +100,58 @@ $routes->group('api', function($routes) {
     $routes->group('stats', function($routes){
         $routes->get('user_skills', 'UserSkillController::getStatsSkills');
     });
-    $routes->group('skills', function($routes){
-        $routes->get('/', 'SkillController::index');
-        $routes->post('/', 'SkillController::save');
-        $routes->put('(:num)', 'SkillController::modify/$1');
-        $routes->delete('(:num)', 'SkillController::deleteSkill/$1');
+     $routes->group('users', function($routes){
+        $routes->get('/', 'Api\UserController::index');        
+        $routes->get('(:num)', 'Api\UserController::show/$1'); 
+        $routes->post('/', 'Api\UserController::create');      
+        $routes->put('(:num)', 'Api\UserController::update/$1'); 
+        $routes->delete('(:num)', 'Api\UserController::delete/$1'); 
     });
-    $routes->group('projects', function($routes){
-        $routes->get('/', 'ProjectController::index');
-        $routes->post('/', 'ProjectController::save');
-        $routes->put('(:num)', 'ProjectController::modify/$1');
-        $routes->delete('(:num)', 'ProjectController::deleteSkill/$1');
-        $routes->post('(:num)/add-detail-stack', 'ProjectController::addTechDataToProject/$1');
-        $routes->get('(:num)/get-detail-stack', 'ProjectController::getStacksForProject/$1');
+
+    $routes->group('skills', function($routes){
+        $routes->get('/', 'Api\SkillController::index');        
+        $routes->get('(:num)', 'Api\SkillController::show/$1'); 
+        $routes->post('/', 'Api\SkillController::create');      
+        $routes->put('(:num)', 'Api\SkillController::update/$1'); 
+        $routes->delete('(:num)', 'Api\SkillController::delete/$1'); 
+    });
+
+     $routes->group('projects', function($routes){
+        $routes->get('/', 'Api\ProjectController::index');              
+        $routes->get('(:num)', 'Api\ProjectController::show/$1');       
+        $routes->post('/', 'Api\ProjectController::create');            
+        $routes->put('(:num)', 'Api\ProjectController::update/$1');     
+        $routes->delete('(:num)', 'Api\ProjectController::delete/$1');  
+    });
+    $routes->group('person', function($routes){
+        $routes->get('/', 'Api\PersonController::index');           // Liste toutes les personnes
+        $routes->get('(:num)', 'Api\PersonController::show/$1');    // Détail d'une personne
+        $routes->post('/', 'Api\PersonController::create');         // Création d'une personne
+        $routes->put('(:num)', 'Api\PersonController::update/$1');  // Modification d'une personne
+        $routes->delete('(:num)', 'Api\PersonController::delete/$1'); // Suppression d'une personne
+    });
+     $routes->group('personskills', function($routes){
+        $routes->get('/', 'Api\PersonSkillsController::index');            // Liste toutes les personskills
+        $routes->get('(:num)', 'Api\PersonSkillsController::show/$1');     // Détail d'une personskill
+        $routes->post('/', 'Api\PersonSkillsController::create');          // Création d'une personskill
+        $routes->put('(:num)', 'Api\PersonSkillsController::update/$1');   // Modification d'une personskill
+        $routes->delete('(:num)', 'Api\PersonSkillsController::delete/$1');// Suppression d'une personskill
+    });
+
+    $routes->group('personproject', function($routes){
+        $routes->get('/', 'Api\PersonProjectController::index');            // Liste tous les personproject
+        $routes->get('(:num)', 'Api\PersonProjectController::show/$1');     // Détail d'un personproject
+        $routes->post('/', 'Api\PersonProjectController::create');          // Création d'un personproject
+        $routes->put('(:num)', 'Api\PersonProjectController::update/$1');   // Modification d'un personproject
+        $routes->delete('(:num)', 'Api\PersonProjectController::delete/$1');// Suppression d'un personproject
+    });
+
+    $routes->group('user_skills', function($routes){
+        $routes->get('/', 'Api\UserSkillController::index');            // Liste tous les user_skills
+        $routes->get('(:num)', 'Api\UserSkillController::show/$1');     // Détail d'un user_skill
+        $routes->post('/', 'Api\UserSkillController::create');          // Création d'un user_skill
+        $routes->put('(:num)', 'Api\UserSkillController::update/$1');   // Modification d'un user_skill
+        $routes->delete('(:num)', 'Api\UserSkillController::delete/$1');// Suppression d'un user_skill
     });
 });
 
