@@ -10,18 +10,18 @@ class SkillController extends Controller
     public function index()
     {
         $skillModel = new SkillModel();
-        $data['skills'] = $skillModel->findAll();
-        return view('skills/index', $data);
+        $skills = $skillModel->findAll();
+        return $this->response->setJSON(['skills' => $skills]);
     }
 
-    public function create()
-    {
-        return view('skills/create');  // Load create skill form
-    }
+
 
     public function store()
     {
         if ($this->request->getMethod(true) === 'POST') {
+            // Accepte JSON ou POST classique
+            $input = $this->request->getJSON(true) ?: $this->request->getPost();
+
             $rules = [
                 'name' => 'required',
                 'category' => 'required'
@@ -35,33 +35,49 @@ class SkillController extends Controller
                 ]
             ];
             if (!$this->validate($rules, $errors)) {
-                return view('skills/create', [
-                    "validation" => $this->validator,
-                ]);
+                return $this->response->setJSON([
+                    "validation" => $this->validator->getErrors(),
+                ])->setStatusCode(400);
             } else {
                 try {
                     $skillModel = new SkillModel();
-                    $data = [
-                        'name'     => $this->request->getPost('name'),
-                        'category'  => $this->request->getPost('category'),
-                    ];
-                    $skill = $skillModel->check_if_already_exist($data['name'], $data['category']);
-                    if (!$skill) {
-                        $skillModel->insert($data);
+                    $skill = $skillModel->check_if_already_exist($input['name'], $input['category']);
+                    if (empty($skill)) {
+                        $id = $skillModel->insert($input);
+                        $createdSkill = $skillModel->find($id);
+                        return $this->response->setJSON([
+                            "message" => "Skill créé avec succès",
+                            "skill" => $createdSkill
+                        ])->setStatusCode(201);
                     } else {
-                        throw new \Exception("Ce skill existe deja.");
+                        return $this->response->setJSON([
+                            "error" => "Ce skill existe déjà."
+                        ])->setStatusCode(409);
                     }
                 } catch (\Exception $e) {
-                    return view('skills/create', [
-                        "validation" => $this->validator,
+                    return $this->response->setJSON([
                         "error" => $e->getMessage()
-                    ]);
+                    ])->setStatusCode(500);
                 }
             }
         }
-        return redirect()->to(base_url('/skills'));
+        return $this->response->setStatusCode(405); // Méthode non autorisée
     }
 
+    public function checkExist()
+    {
+        $name = $this->request->getGet('name');
+        $category = $this->request->getGet('category');
+
+        if (!$name) {
+            return $this->response->setJSON(['exists' => false, 'error' => 'Missing name parameter'])->setStatusCode(400);
+        }
+
+        $skillModel = new \App\Models\SkillModel();
+        $result = $skillModel->check_if_already_exist($name, $category);
+
+        return $this->response->setJSON(['exists' => !empty($result)]);
+    }
     public function save()
     {
         $data = $this->request->getJSON(true);
@@ -134,6 +150,6 @@ class SkillController extends Controller
     {
         $skillModel = new SkillModel();
         $skillModel->delete($id);
-        return redirect()->to(base_url('/skills'));
+        return  $this->response->setStatusCode(201);
     }
 }

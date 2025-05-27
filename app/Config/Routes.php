@@ -109,17 +109,18 @@ $routes->group('api', function($routes) {
     });
 
     $routes->group('skills', function($routes){
-        $routes->get('/', 'Api\SkillController::index');        
-        $routes->get('(:num)', 'Api\SkillController::show/$1'); 
-        $routes->post('/', 'Api\SkillController::create');      
-        $routes->put('(:num)', 'Api\SkillController::update/$1'); 
-        $routes->delete('(:num)', 'Api\SkillController::delete/$1'); 
+        $routes->get('/', 'SkillController::index');        
+        $routes->get('(:num)', 'SkillController::show/$1'); 
+        $routes->post('/', 'SkillController::store');      
+        $routes->put('(:num)', 'SkillController::update/$1'); 
+        $routes->delete('(:num)', 'SkillController::delete/$1'); 
+        $routes->get('check-exist', 'SkillController::checkExist');
     });
 
      $routes->group('projects', function($routes){
         $routes->get('/', 'Api\ProjectController::index');              
         $routes->get('(:num)', 'Api\ProjectController::show/$1');       
-        $routes->post('/', 'Api\ProjectController::create');            
+        $routes->post('/', 'Api\ProjectController::store');            
         $routes->put('(:num)', 'Api\ProjectController::update/$1');     
         $routes->delete('(:num)', 'Api\ProjectController::delete/$1');  
     });
