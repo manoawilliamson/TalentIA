@@ -22,60 +22,78 @@ class ProjectController extends Controller
         return view('projects/create');  // Load create skill form
     }
 
-public function store()
-{
-    if ($this->request->getMethod(true) === 'POST') {
-        $rules = [
-            'name' => 'required',
-            'description' => 'required',
-            'datebegin' => 'required',
-            'dateend' => 'required',
-            'nbrperson' => 'required|integer|greater_than[0]',
-            'remark' => 'required'
-        ];
-
-        if (!$this->validate($rules)) {
-            // Si c'est une requête AJAX/API (React), retourne JSON
-            if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
-                return $this->response->setStatusCode(422)
-                    ->setJSON(['errors' => $this->validator->getErrors()]);
-            }
-            // Sinon, retourne la vue classique avec erreurs
-            return view('projects/create', [
-                "validation" => $this->validator,
-            ]);
-        }
-
-        try {
-            $projectModel = new ProjectModel();
-            $file = $this->request->getFile('file');
-            $newName = null;
-
-            if ($file && $file->isValid() && !$file->hasMoved()) {
-                if ($file->getSize() > 2097152) { // 2MB max
-                    $errorMsg = 'Fichier trop volumineux';
-                    if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
-                        return $this->response->setStatusCode(400)
-                            ->setJSON(['error' => $errorMsg]);
-                    }
-                    return redirect()->back()->with('error', $errorMsg);
-                }
-                $newName = $file->getRandomName();
-                $file->move(WRITEPATH . 'uploads', $newName);
-            }
-
-            $data = [
-                'name' => $this->request->getPost('name'),
-                'description' => $this->request->getPost('description'),
-                'datebegin' => $this->request->getPost('datebegin'),
-                'dateend' => $this->request->getPost('dateend'),
-                'nbrperson' => $this->request->getPost('nbrperson'),
-                'remark' => $this->request->getPost('remark'),
-                'file' => $newName,
+    public function store()
+    {
+        if ($this->request->getMethod(true) === 'POST') {
+            $rules = [
+                'name' => 'required',
+                'description' => 'required',
+                'datebegin' => 'required',
+                'dateend' => 'required',
+                'nbrperson' => 'required|integer|greater_than[0]',
+                'remark' => 'required'
             ];
 
-            if (!$projectModel->insert($data)) {
-                $errorMsg = 'Erreur lors de l\'insertion';
+            if (!$this->validate($rules)) {
+                // Si c'est une requête AJAX/API (React), retourne JSON
+                if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
+                    return $this->response->setStatusCode(422)
+                        ->setJSON(['errors' => $this->validator->getErrors()]);
+                }
+                // Sinon, retourne la vue classique avec erreurs
+                return view('projects/create', [
+                    "validation" => $this->validator,
+                ]);
+            }
+
+            try {
+                $projectModel = new ProjectModel();
+                $file = $this->request->getFile('file');
+                $newName = null;
+
+                if ($file && $file->isValid() && !$file->hasMoved()) {
+                    if ($file->getSize() > 2097152) { // 2MB max
+                        $errorMsg = 'Fichier trop volumineux';
+                        if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
+                            return $this->response->setStatusCode(400)
+                                ->setJSON(['error' => $errorMsg]);
+                        }
+                        return redirect()->back()->with('error', $errorMsg);
+                    }
+                    $newName = $file->getRandomName();
+                    $file->move(WRITEPATH . 'uploads', $newName);
+                }
+
+                $data = [
+                    'name' => $this->request->getPost('name'),
+                    'description' => $this->request->getPost('description'),
+                    'datebegin' => $this->request->getPost('datebegin'),
+                    'dateend' => $this->request->getPost('dateend'),
+                    'nbrperson' => $this->request->getPost('nbrperson'),
+                    'remark' => $this->request->getPost('remark'),
+                    'file' => $newName,
+                ];
+
+                if (!$projectModel->insert($data)) {
+                    $errorMsg = 'Erreur lors de l\'insertion';
+                    if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
+                        return $this->response->setStatusCode(500)
+                            ->setJSON(['error' => $errorMsg]);
+                    }
+                    return view('projects/create', [
+                        "validation" => $this->validator,
+                        "error" => $errorMsg
+                    ]);
+                }
+
+                // Succès : JSON pour API, redirect pour HTML
+                if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
+                    return $this->response->setStatusCode(201)
+                        ->setJSON(['success' => true, 'project' => $data]);
+                }
+                return redirect()->to(base_url('projects'));
+            } catch (\Throwable $e) {
+                $errorMsg = $e->getMessage();
                 if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
                     return $this->response->setStatusCode(500)
                         ->setJSON(['error' => $errorMsg]);
@@ -85,38 +103,25 @@ public function store()
                     "error" => $errorMsg
                 ]);
             }
-
-            // Succès : JSON pour API, redirect pour HTML
-            if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
-                return $this->response->setStatusCode(201)
-                    ->setJSON(['success' => true, 'project' => $data]);
-            }
-            return redirect()->to(base_url('projects'));
-        } catch (\Throwable $e) {
-            $errorMsg = $e->getMessage();
-            if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
-                return $this->response->setStatusCode(500)
-                    ->setJSON(['error' => $errorMsg]);
-            }
-            return view('projects/create', [
-                "validation" => $this->validator,
-                "error" => $errorMsg
-            ]);
         }
+
+        // Si ce n'est pas un POST, retourne la vue classique
+        return view('projects/create');
     }
 
-    // Si ce n'est pas un POST, retourne la vue classique
-    return view('projects/create');
-}
 
     public function download($filename)
     {
         $path = WRITEPATH . 'uploads/' . $filename;
 
         if (!file_exists($path)) {
-            return redirect()->back()->with('error', 'Fichier non trouvé');
+            return $this->response->setStatusCode(404)->setJSON([
+                'status' => 'error',
+                'message' => 'Fichier non trouvé'
+            ]);
         }
 
+        // Pour forcer le téléchargement (Content-Disposition: attachment)
         return $this->response->download($path, null);
     }
 
@@ -213,13 +218,43 @@ public function store()
         $project = $projectModel->find($id);
 
         $v_projectSkillsModel = new V_ProjectSkillsModel();
-        $data = $v_projectSkillsModel->getSkillsForProject($id);
-        return view('projects/fiche', ['project' => $project, 'proskills' => $data]);
+        $proskills = $v_projectSkillsModel->getSkillsForProject($id);
+
+        // Si la requête attend du JSON (API/AJAX)
+        if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
+            return $this->response->setStatusCode(200)
+                ->setJSON([
+                    'project' => $project,
+                    'proskills' => $proskills
+                ]);
+        }
+
+        // Sinon, retourne la vue classique
+        return view('projects/fiche', ['project' => $project, 'proskills' => $proskills]);
     }
 
     public function delete($id)
     {
         $projectModel = new ProjectModel();
+
+        // Si la requête attend du JSON (API/AJAX)
+        if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
+            try {
+                $deleted = $projectModel->delete($id);
+                if ($deleted) {
+                    return $this->response->setStatusCode(200)
+                        ->setJSON(['success' => true, 'message' => 'Projet supprimé']);
+                } else {
+                    return $this->response->setStatusCode(404)
+                        ->setJSON(['success' => false, 'message' => 'Projet non trouvé']);
+                }
+            } catch (\Throwable $e) {
+                return $this->response->setStatusCode(500)
+                    ->setJSON(['success' => false, 'error' => $e->getMessage()]);
+            }
+        }
+
+        // Sinon, comportement classique (HTML)
         $projectModel->delete($id);
         return redirect()->to(base_url('/projects'));
     }

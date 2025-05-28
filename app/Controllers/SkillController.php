@@ -93,63 +93,50 @@ class SkillController extends Controller
         return view('skills/edit', $data);  // Load edit form with skill data
     }
 
-    public function update($id)
-    {
-        if ($this->request->getMethod(true) === 'POST') {
-            $rules = [
-                'name' => 'required',
-                'category' => 'required'
-            ];
-            $errors = [
-                'name' => [
-                    'required' => "Champ name ne doit pas être vide"
-                ],
-                'category' => [
-                    'required' => "Champ category ne doit pas être vide"
-                ]
-            ];
+public function update($id)
+{
+    $input = $this->request->getJSON(true);
+    $skillModel = new SkillModel();
 
-            if (!$this->validate($rules, $errors)) {
-                $skillModel = new SkillModel();
-                $skill = $skillModel->find($id);
-
-                return view('skills/edit', [
-                    "validation" => $this->validator,
-                    "skill" => $skill
-                ]);
-            } else {
-                try {
-                    $skillModel = new SkillModel();
-                    $data = [
-                        'name'     => $this->request->getPost('name'),
-                        'category' => $this->request->getPost('category'),
-                    ];
-
-                    $skills = $skillModel->check_if_already_exist($data['name'], $data['category']);
-                    if (!$skills) {
-                        $skillModel->update($id, $data);
-                        return redirect()->to('skills');
-                    } else {
-                        return view('skills/edit', [
-                            'error' => 'Cette compétence existe déjà.',
-                            'skill' => ['id' => $id, 'name' => $data['name'], 'category' => $data['category']]
-                        ]);
-                    }
-                } catch (\Exception $e) {
-                    return view('skills/edit', [
-                        'error' => 'Une erreur est survenue : ' . $e->getMessage(),
-                        'skill' => ['id' => $id, 'name' => $this->request->getPost('name'), 'category' => $this->request->getPost('category')]
-                    ]);
-                }
-            }
-        }
+    $rules = [
+        'name' => 'required',
+        'category' => 'required'
+    ];
+    if (!$this->validate($rules)) {
+        return $this->response->setJSON([
+            "validation" => $this->validator->getErrors(),
+        ])->setStatusCode(400);
     }
 
-
-    public function delete($id)
-    {
-        $skillModel = new SkillModel();
-        $skillModel->delete($id);
-        return  $this->response->setStatusCode(201);
+    $skill = $skillModel->find($id);
+    if (!$skill) {
+        return $this->response->setJSON(['error' => 'Skill not found'])->setStatusCode(404);
     }
+
+    $skillModel->update($id, $input);
+    $updatedSkill = $skillModel->find($id);
+    return $this->response->setJSON([
+        "message" => "Skill updated",
+        "skill" => $updatedSkill
+    ]);
+}
+
+
+
+public function delete($id)
+{
+    $skillModel = new SkillModel();
+    $deleted = $skillModel->delete($id);
+
+    if ($deleted) {
+        return $this->response->setJSON([
+            "message" => "Skill supprimé avec succès"
+        ])->setStatusCode(200);
+    } else {
+        return $this->response->setJSON([
+            "error" => "Skill introuvable ou déjà supprimé"
+        ])->setStatusCode(404);
+    }
+}
+     
 }
