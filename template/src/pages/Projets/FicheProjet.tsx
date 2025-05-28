@@ -3,7 +3,6 @@ import TechStackIcon from '../../components/icons/TechStackIcon';
 import RecomendationIcon from '../../components/icons/RecomendationIcon';
 import AssigneeIcon from '../../components/icons/AssigneeIconc';
 import GalleryIcon from '../../components/icons/GalleryIcon';
-import Recomends from '../../components/Fiche/RecommendationPeoples';
 import Assigned from '../../components/Fiche/AssignedEmployee';
 import { getSkills } from "../../services/Skills.service";
 import type { Skill } from "../../types/skill";
@@ -202,6 +201,122 @@ const SkillsList = ({
   </div>
 );
 
+// Composant pour afficher les recommandations
+const RecommendationList = ({ projectId }: { projectId: number }) => {
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [checkedRows, setCheckedRows] = useState<{ [key: number]: boolean }>({});
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`http://localhost:8080/api/personproject/recommendation/${projectId}`)
+      .then(res => res.json())
+      .then(data => {
+        setRecommendations(data.recommendations || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [projectId]);
+
+  const handleCheck = (id: number) => {
+    setCheckedRows(prev => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  if (loading) return <div>Chargement...</div>;
+  if (!recommendations.length) return <div>Aucune recommandation trouvée.</div>;
+
+  return (
+    <div className="p-4">
+      <h5 className="font-bold mb-2">Top 5 personnes recommandées</h5>
+      <div className="overflow-x-auto">
+        <table className="min-w-full border text-sm rounded-lg overflow-hidden">
+          <thead>
+            <tr className="bg-gray-100 dark:bg-gray-800">
+              <th className="px-4 py-2 border"></th>
+              <th className="px-4 py-2 border">Nom</th>
+              <th className="px-4 py-2 border">Prénom</th>
+              <th className="px-4 py-2 border">Score</th>
+              <th className="px-4 py-2 border">Compétences requises</th>
+              <th className="px-4 py-2 border">Compétences matchées</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recommendations.map((rec, idx) => (
+              <tr key={rec.idperson || idx} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <td className="px-4 py-2 border text-center">
+                  <input
+                    type="checkbox"
+                    checked={!!checkedRows[rec.idperson]}
+                    onChange={() => handleCheck(rec.idperson)}
+                  />
+                </td>
+                <td className="px-4 py-2 border">{rec.name}</td>
+                <td className="px-4 py-2 border">{rec.firstname}</td>
+                <td className="px-4 py-2 border">{rec.matching_score}</td>
+                <td className="px-4 py-2 border">{rec.total_required_skills}</td>
+                <td className="px-4 py-2 border">{rec.matched_skills}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// Composant pour afficher les personnes assignées (API)
+const AssignedList = ({ projectId }: { projectId: number }) => {
+  const [assigned, setAssigned] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`http://localhost:8080/api/personproject/${projectId}`)
+      .then(res => res.json())
+      .then(data => {
+        setAssigned(data.persons || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [projectId]);
+
+  if (loading) return <div>Chargement...</div>;
+  if (!assigned.length) return <div>Aucune personne assignée.</div>;
+
+  return (
+    <div className="p-4">
+      <h5 className="font-bold mb-2">Personnes assignées au projet</h5>
+      <div className="overflow-x-auto">
+        <table className="min-w-full border text-sm rounded-lg overflow-hidden">
+          <thead>
+            <tr className="bg-gray-100 dark:bg-gray-800">
+              <th className="px-4 py-2 border">Nom</th>
+              <th className="px-4 py-2 border">Prénom</th>
+              <th className="px-4 py-2 border">Email</th>
+              <th className="px-4 py-2 border">Téléphone</th>
+              <th className="px-4 py-2 border">Date de naissance</th>
+            </tr>
+          </thead>
+          <tbody>
+            {assigned.map((person, idx) => (
+              <tr key={person.idperson || idx} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <td className="px-4 py-2 border">{person.name}</td>
+                <td className="px-4 py-2 border">{person.firstname}</td>
+                <td className="px-4 py-2 border">{person.email}</td>
+                <td className="px-4 py-2 border">{person.telephone}</td>
+                <td className="px-4 py-2 border">{person.birthday}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
 const FicheProjet = ({ data }: FicheProjetProps) => {
   const [activeOngletRef, setActiveOngletRef] = useState<number>(0);
   const [ActiveDetails, setActiveDetails] = useState<any>(null);
@@ -221,7 +336,6 @@ const FicheProjet = ({ data }: FicheProjetProps) => {
 
   useEffect(() => {
     getSkills().then(data => {
-      // Correction ici pour supporter {skills: [...]}
       if (data && Array.isArray(data.skills)) {
         setAvailableSkills(data.skills);
       } else if (Array.isArray(data)) {
@@ -274,27 +388,26 @@ const FicheProjet = ({ data }: FicheProjetProps) => {
     setEditIdx(null);
   };
 
- 
-const handleDeleteSkill = async (idx: number) => {
-  const skill = skills[idx];
-  const idprojet = skill.idprojet;
+  const handleDeleteSkill = async (idx: number) => {
+    const skill = skills[idx];
+    const idprojet = skill.idprojet;
     const idskills = skill.idskills;
-  if (!idprojet || !idskills) {
+    if (!idprojet || !idskills) {
       return;
     }
 
-  const response = await fetch(`http://localhost:8080/api/projectskills/${idprojet}/${idskills}`, {
-  method: 'DELETE',
-  });
+    const response = await fetch(`http://localhost:8080/api/projectskills/${idprojet}/${idskills}`, {
+      method: 'DELETE',
+    });
 
-  if (response.ok) {
-    setSkills(skills.filter((_, i) => i !== idx));
-    setEditIdx(null);
-  } else {
-    const result = await response.json();
-    alert("Erreur lors de la suppression du skill: " + (result?.error || JSON.stringify(result)));
-  }
-};
+    if (response.ok) {
+      setSkills(skills.filter((_, i) => i !== idx));
+      setEditIdx(null);
+    } else {
+      const result = await response.json();
+      alert("Erreur lors de la suppression du skill: " + (result?.error || JSON.stringify(result)));
+    }
+  };
 
   // Gestion ajout skill
   const handleAddClick = () => {
@@ -310,36 +423,34 @@ const handleDeleteSkill = async (idx: number) => {
     }));
   };
 
- const handleAddSave = async () => {
-  if (!addValue.skillId || !addValue.checked) return;
-  const response = await fetch(`http://localhost:8080/api/projectskills`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      idprojet: project.id,
-      idskills: Number(addValue.skillId),
-      noteskills: Number(addValue.noteskills),
-    }),
-  });
-  const result = await response.json();
-  if (response.ok) {
-    // Utilise l'objet retourné par l'API pour mettre à jour le tableau
-    setSkills([
-      ...skills,
-      {
-        idproskills: result.idproskills || Math.random(),
-        skill: availableSkills.find(s => s.id === Number(addValue.skillId))?.name || "",
-        noteskills: addValue.noteskills,
-        idskill: Number(addValue.skillId),
-        // Ajoute d'autres champs si besoin depuis result.skill
-        ...result.skill
-      },
-    ]);
-    setAdding(false);
-  } else {
-    alert("Erreur lors de l'ajout du skill: " + (result?.error || JSON.stringify(result)));
-  }
-};
+  const handleAddSave = async () => {
+    if (!addValue.skillId || !addValue.checked) return;
+    const response = await fetch(`http://localhost:8080/api/projectskills`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idprojet: project.id,
+        idskills: Number(addValue.skillId),
+        noteskills: Number(addValue.noteskills),
+      }),
+    });
+    const result = await response.json();
+    if (response.ok) {
+      setSkills([
+        ...skills,
+        {
+          idproskills: result.idproskills || Math.random(),
+          skill: availableSkills.find(s => s.id === Number(addValue.skillId))?.name || "",
+          noteskills: addValue.noteskills,
+          idskill: Number(addValue.skillId),
+          ...result.skill
+        },
+      ]);
+      setAdding(false);
+    } else {
+      alert("Erreur lors de l'ajout du skill: " + (result?.error || JSON.stringify(result)));
+    }
+  };
 
   const handleAddCancel = () => {
     setAdding(false);
@@ -375,13 +486,13 @@ const handleDeleteSkill = async (idx: number) => {
       ref: 'rec',
       name: 'Recommandation',
       icons: RecomendationIcon,
-      component: <Recomends />,
+      component: <RecommendationList projectId={project.id} />,
     },
     {
       ref: 'asg',
       name: 'Assignées',
       icons: AssigneeIcon,
-      component: <Assigned />,
+      component: <AssignedList projectId={project.id} />,
     },
     {
       ref: 'gal',

@@ -148,11 +148,12 @@ $routes->group('api', function ($routes) {
     });
 
     $routes->group('personproject', function ($routes) {
-        $routes->get('/', 'Api\PersonProjectController::index');            // Liste tous les personproject
-        $routes->get('(:num)', 'Api\PersonProjectController::show/$1');     // Détail d'un personproject
-        $routes->post('/', 'Api\PersonProjectController::create');          // Création d'un personproject
-        $routes->put('(:num)', 'Api\PersonProjectController::update/$1');   // Modification d'un personproject
-        $routes->delete('(:num)', 'Api\PersonProjectController::delete/$1'); // Suppression d'un personproject
+        $routes->get('/', 'PersonProjectController::index');            // Liste tous les personproject
+        $routes->get('(:num)', 'PersonProjectController::show/$1');     // Détail d'un personproject
+        $routes->post('/', 'PersonProjectController::create');          // Création d'un personproject
+        $routes->put('(:num)', 'PersonProjectController::update/$1');   // Modification d'un personproject
+        $routes->delete('(:num)', 'PersonProjectController::delete/$1'); // Suppression d'un personproject
+        $routes->get('recommendation/(:num)', 'PersonProjectController::recommendation/$1');
     });
 
     $routes->group('user_skills', function ($routes) {

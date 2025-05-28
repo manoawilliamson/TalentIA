@@ -4,22 +4,22 @@ namespace App\Controllers;
 
 use App\Models\PersonModel;
 use App\Models\PersonProjectModel;
+use App\Models\V_PersonProjectModel;
 use CodeIgniter\Controller;
-use App\Models\SkillModel;
-use App\Models\V_PersonSkillsModel;
+use App\Models\V_RecomPersonModel;
 
 class PersonProjectController extends Controller
 {
-    public function index($projecId)
-    {
+    public function show($idproject)
+{
+    $model = new V_PersonProjectModel();
+    $result = $model->getPersonsByProject($idproject);
 
-        $personModel = new PersonModel();
-        $data = [
-            'persons' => $personModel->findAll(),
-            'projecId' => $projecId
-        ];
-        return view('personprojects/create', $data);
-    }
+    return $this->response->setJSON([
+        'persons' => $result
+    ]);
+}
+
 
     public function store()
     {
@@ -60,5 +60,15 @@ class PersonProjectController extends Controller
                 "error" => $e->getMessage()
             ]);
         }
+    }
+
+    public function recommendation($idproject)
+    {
+        $recommendationModel = new V_RecomPersonModel();
+        $result = $recommendationModel->getTop5ForProject($idproject);
+
+        return $this->response->setJSON([
+            'recommendations' => $result
+        ]);
     }
 }

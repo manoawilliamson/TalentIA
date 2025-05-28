@@ -34,4 +34,6 @@ class PersonModel extends Model
         $query = $this->db->query($sql, [$email, $telephone]);
         return $query->getResult();
     }
+
+    
 }
