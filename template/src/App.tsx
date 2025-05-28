@@ -20,6 +20,7 @@ import SkillCreation from './pages/Skills/SkillCreation';
 import Skills from './pages/Skills/Index';
 import Projects from './pages/Projets/Index';
 import FicheProjet from './pages/Projets/FicheProjet';
+import Person from './pages/Person/Index';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -60,6 +61,15 @@ function App() {
             <>
               <PageTitle title="Dashboard | Overview " />
               <ECommerce />
+            </>
+          }
+        />
+        <Route
+          path='/person'
+          element={
+            <>
+              <PageTitle title="Person | Overview " />
+              <Person />
             </>
           }
         />

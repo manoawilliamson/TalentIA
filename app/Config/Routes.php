@@ -132,13 +132,12 @@ $routes->group('api', function ($routes) {
         $routes->put('(:num)', 'ProjectSkillsController::update/$1');      // Modification d'un projectskill
         $routes->delete('(:num)', 'ProjectSkillsController::delete/$1');   // Suppression d'un projectskill
     });
-
-    $routes->group('person', function ($routes) {
-        $routes->get('/', 'Api\PersonController::index');           // Liste toutes les personnes
-        $routes->get('(:num)', 'Api\PersonController::show/$1');    // Détail d'une personne
-        $routes->post('/', 'Api\PersonController::create');         // Création d'une personne
-        $routes->put('(:num)', 'Api\PersonController::update/$1');  // Modification d'une personne
-        $routes->delete('(:num)', 'Api\PersonController::delete/$1'); // Suppression d'une personne
+    $routes->group('person', function($routes){
+        $routes->get('/', 'PersonController::index');           // Liste toutes les personnes
+        $routes->get('(:num)', 'PersonController::show/$1');    // Détail d'une personne
+        $routes->post('/', 'PersonController::create');         // Création d'une personne
+        $routes->put('(:num)', 'PersonController::update/$1');  // Modification d'une personne
+        $routes->delete('(:num)', 'PersonController::delete/$1'); // Suppression d'une personne
     });
     $routes->group('personskills', function ($routes) {
         $routes->get('/', 'Api\PersonSkillsController::index');            // Liste toutes les personskills
