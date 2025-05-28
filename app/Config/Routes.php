@@ -128,9 +128,9 @@ $routes->group('api', function ($routes) {
     $routes->group('projectskills', function ($routes) {
         $routes->get('/', 'ProjectSkillsController::index');                // Liste tous les projectskills
         $routes->get('(:num)', 'ProjectSkillsController::show/$1');        // Détail d'un projectskill
-        $routes->post('/', 'ProjectSkillsController::create');             // Création d'un projectskill
-        $routes->put('(:num)', 'ProjectSkillsController::update/$1');      // Modification d'un projectskill
-        $routes->delete('(:num)', 'ProjectSkillsController::delete/$1');   // Suppression d'un projectskill
+        $routes->post('/', 'ProjectSkillsController::store');             // Création d'un projectskill
+        $routes->put('(:num)/(:num)', 'ProjectSkillsController::update/$1/$2');;    // Modification d'un projectskill
+        $routes->delete('(:num)/(:num)', 'ProjectSkillsController::delete/$1/$2');  // Suppression d'un projectskill
     });
     $routes->group('person', function($routes){
         $routes->get('/', 'PersonController::index');           // Liste toutes les personnes

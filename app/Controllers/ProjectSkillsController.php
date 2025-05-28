@@ -20,67 +20,77 @@ class ProjectSkillsController extends Controller
         return view('projectskills/create', $data);
     }
 
-    public function store()
-    {
-        $id = $this->request->getPost('id');
-        $rules = [
-            'noteskills' => 'required|integer|greater_than[0]',
-            'idskills' => 'required'
-        ];
-        $errors = [
-            'noteskills' => [
-                'required' => "Champ note skills ne doit pas etre vide",
-                'integer' => "Note skills doit être un nombre entier",
-                'greater_than' => "Note skills doit être un nombre entier positif"
-            ],
-            'idskills' => [
-                'required' => "Champ skills ne doit pas etre vide"
-            ]
-        ];
+ 
+public function store()
+{
+    // Accepte JSON ou x-www-form-urlencoded
+    $input = $this->request->getJSON(true) ?? $this->request->getPost();
 
-        if (!$this->validate($rules, $errors)) {
-            $skillModel = new SkillModel();
-            return view('projectskills/create', [
-                "validation" => $this->validator,
-                "projectId" => $id,
-                "skills" => $skillModel->findAll()
-            ]);
-        }
+    $rules = [
+        'idprojet' => 'required',
+        'idskills' => 'required',
+        'noteskills' => 'required|integer|greater_than[0]'
+    ];
+    $errors = [
+        'idprojet' => [
+            'required' => "Champ projet requis"
+        ],
+        'idskills' => [
+            'required' => "Champ skills ne doit pas être vide"
+        ],
+        'noteskills' => [
+            'required' => "Champ note skills ne doit pas être vide",
+            'integer' => "Note skills doit être un nombre entier",
+            'greater_than' => "Note skills doit être un nombre entier positif"
+        ]
+    ];
 
-        try {
-            $projectSkillsModel = new ProjectSkillsModel();
-            $data = [
-                'idproject' => $id,
-                'idskills' => $this->request->getPost('idskills'),
-                'noteskills' => $this->request->getPost('noteskills')
-            ];
-
-            $existingSkill = $projectSkillsModel->where('idproject', $id)
-                ->where('idskills', $this->request->getPost('idskills'))
-                ->first();
-
-            if (!$existingSkill) {
-                $projectSkillsModel->insert($data);
-                return redirect()->to(base_url('projects/fiche/' . $id));
-            } else {
-                $skillModel = new SkillModel();
-                return view('projectskills/create', [
-                    "validation" => $this->validator,
-                    "projectId" => $id,
-                    "skills" => $skillModel->findAll(),
-                    "error" => "Cette compétence est déjà associée à ce projet."
-                ]);
-            }
-        } catch (\Exception $e) {
-            $skillModel = new SkillModel();
-            return view('projectskills/create', [
-                "validation" => $this->validator,
-                "projectId" => $id,
-                "skills" => $skillModel->findAll(),
-                "error" => $e->getMessage()
-            ]);
-        }
+    if (!$this->validate($rules, $errors)) {
+        return $this->response->setJSON([
+            "validation" => $this->validator->getErrors()
+        ])->setStatusCode(400);
     }
+
+    try {
+        $projectSkillsModel = new ProjectSkillsModel();
+
+        // Vérifie si la compétence est déjà associée à ce projet
+        $existingSkill = $projectSkillsModel
+            ->where('idproject', $input['idprojet'])
+            ->where('idskills', $input['idskills'])
+            ->first();
+
+        if ($existingSkill) {
+            return $this->response->setJSON([
+                "error" => "Cette compétence est déjà associée à ce projet."
+            ])->setStatusCode(409);
+        }
+
+        $data = [
+            'idproject' => $input['idprojet'],
+            'idskills' => $input['idskills'],
+            'noteskills' => $input['noteskills']
+        ];
+
+        $insertId = $projectSkillsModel->insert($data);
+        if ($insertId) {
+            $newSkill = $projectSkillsModel->find($insertId);
+            return $this->response->setJSON([
+                "message" => "Skill ajouté avec succès",
+                "idproskills" => $insertId,
+                "skill" => $newSkill
+            ])->setStatusCode(201);
+        } else {
+            return $this->response->setJSON([
+                "error" => "Erreur lors de l'insertion"
+            ])->setStatusCode(500);
+        }
+    } catch (\Exception $e) {
+        return $this->response->setJSON([
+            "error" => $e->getMessage()
+        ])->setStatusCode(500);
+    }
+}
 
     public function list($id)
     {
@@ -98,68 +108,88 @@ class ProjectSkillsController extends Controller
         return view('projectskills/edit', $data);
     }
 
-    public function updateSkill($idskills)
+
+
+    public function update($idprojet, $idskills)
     {
-        if ($this->request->getMethod(true) === 'POST') {
-            $idprojet = $this->request->getPost('idprojet');
-
-            $rules = [
-                'noteskills' => 'required|integer|greater_than[0]',
-                'idskills' => 'required'
-            ];
-            $errors = [
-                'noteskills' => [
-                    'required' => "Champ note skills ne doit pas être vide",
-                    'integer' => "Note skills doit être un nombre entier",
-                    'greater_than' => "Note skills doit être un nombre entier positif"
-                ],
-                'idskills' => [
-                    'required' => "Champ skills ne doit pas être vide"
-                ]
-            ];
-
-            if (!$this->validate($rules, $errors)) {
-                $v_projectSkillsModel = new V_ProjectSkillsModel();
-                $data['proskills'] = $v_projectSkillsModel->where('idprojet', $idprojet)
-                    ->where('idskills', $idskills)
-                    ->first();
-                return view('projectskills/edit', [
-                    "validation" => $this->validator,
-                    "proskills" => $data['proskills']
-                ]);
-            }
-
-            try {
-                $projectSkillsModel = new ProjectSkillsModel();
-                $idskill = $this->request->getPost('idskills');
-                $idprojet = $this->request->getPost('idprojet');
-                $note = $this->request->getPost('noteskills');
-                $existingSkill = $projectSkillsModel->where('idproject', $idprojet)
-                    ->where('idskills', $idskill)
-                    ->first();
-                if (!$existingSkill) {
-                    $projectSkillsModel->updateNoteSkill($idprojet, $idskill, $note);
-                    return redirect()->to(base_url('projects/fiche/' . $idprojet));
-                }
-                else {
-                    return view('projectskills/create', [
-                "validation" => $this->validator
-                ]);
-                }
-
-            } catch (\Exception $e) {
-                return view('projectskills/edit', [
-                    "validation" => $this->validator,
-                    "error" => $e->getMessage()
-                ]);
-            }
+        $method = $this->request->getMethod(true);
+        if ($method !== 'PUT' && $method !== 'PATCH') {
+            return $this->response->setJSON([
+                "error" => "Méthode non autorisée"
+            ])->setStatusCode(405);
         }
+
+        $input = $this->request->getJSON(true);
+
+        $rules = [
+            'noteskills' => 'required|integer|greater_than[0]'
+        ];
+        $errors = [
+            'noteskills' => [
+                'required' => "Champ note skills ne doit pas être vide",
+                'integer' => "Note skills doit être un nombre entier",
+                'greater_than' => "Note skills doit être un nombre entier positif"
+            ]
+        ];
+
+        if (!$this->validate($rules, $errors)) {
+            return $this->response->setJSON([
+                "validation" => $this->validator->getErrors(),
+            ])->setStatusCode(400);
+        }
+
+        $projectSkillsModel = new ProjectSkillsModel();
+        // Recherche la ligne à modifier par idprojet ET idskills
+        $projectSkill = $projectSkillsModel
+            ->where('idproject', $idprojet)
+            ->where('idskills', $idskills)
+            ->first();
+
+        if (!$projectSkill) {
+            return $this->response->setJSON([
+                "error" => "Skill non trouvé pour ce projet"
+            ])->setStatusCode(404);
+        }
+
+        // Met à jour la note
+        $projectSkillsModel
+            ->where('idproject', $idprojet)
+            ->where('idskills', $idskills)
+            ->set(['noteskills' => $input['noteskills']])
+            ->update();
+        $updated = $projectSkillsModel
+            ->where('idproject', $idprojet)
+            ->where('idskills', $idskills)
+            ->first();
+
+        return $this->response->setJSON([
+            "message" => "Skill modifié avec succès",
+            "skill" => $updated
+        ])->setStatusCode(200);
     }
 
-    public function delete($idskill, $idproject)
-    {
-        $projectSkillsModel = new ProjectSkillsModel();
-        $projectSkillsModel->deleteSkill($idproject, $idskill);
-        return redirect()->to(base_url('projects/fiche/' . $idproject));
+    public function delete($idprojet, $idskills)
+{
+    if ($this->request->getMethod(true) !== 'DELETE') {
+        return $this->response->setJSON([
+            "error" => "Méthode non autorisée"
+        ])->setStatusCode(405);
     }
+
+    $projectSkillsModel = new ProjectSkillsModel();
+    $deleted = $projectSkillsModel
+        ->where('idproject', $idprojet)
+        ->where('idskills', $idskills)
+        ->delete();
+
+    if ($deleted) {
+        return $this->response->setJSON([
+            "message" => "Skill supprimé du projet avec succès"
+        ])->setStatusCode(200);
+    } else {
+        return $this->response->setJSON([
+            "error" => "Aucune correspondance trouvée"
+        ])->setStatusCode(404);
+    }
+}
 }
