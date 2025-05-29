@@ -150,7 +150,7 @@ $routes->group('api', function ($routes) {
     $routes->group('personproject', function ($routes) {
         $routes->get('/', 'PersonProjectController::index');            // Liste tous les personproject
         $routes->get('(:num)', 'PersonProjectController::show/$1');     // Détail d'un personproject
-        $routes->post('/', 'PersonProjectController::create');          // Création d'un personproject
+        $routes->post('/', 'PersonProjectController::store');          // Création d'un personproject
         $routes->put('(:num)', 'PersonProjectController::update/$1');   // Modification d'un personproject
         $routes->delete('(:num)', 'PersonProjectController::delete/$1'); // Suppression d'un personproject
         $routes->get('recommendation/(:num)', 'PersonProjectController::recommendation/$1');

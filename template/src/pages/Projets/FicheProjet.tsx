@@ -3,7 +3,6 @@ import TechStackIcon from '../../components/icons/TechStackIcon';
 import RecomendationIcon from '../../components/icons/RecomendationIcon';
 import AssigneeIcon from '../../components/icons/AssigneeIconc';
 import GalleryIcon from '../../components/icons/GalleryIcon';
-import Assigned from '../../components/Fiche/AssignedEmployee';
 import { getSkills } from "../../services/Skills.service";
 import type { Skill } from "../../types/skill";
 
@@ -267,11 +266,15 @@ const RecommendationList = ({ projectId }: { projectId: number }) => {
   );
 };
 
-// Composant pour afficher les personnes assignées (API)
+// Composant pour afficher les personnes assignées (API) avec ajout
 const AssignedList = ({ projectId }: { projectId: number }) => {
   const [assigned, setAssigned] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [addValue, setAddValue] = useState<{ personId: string; checked: boolean }>({ personId: "", checked: false });
+  const [availablePersons, setAvailablePersons] = useState<any[]>([]);
 
+  // Charger les personnes assignées
   useEffect(() => {
     setLoading(true);
     fetch(`http://localhost:8080/api/personproject/${projectId}`)
@@ -283,12 +286,78 @@ const AssignedList = ({ projectId }: { projectId: number }) => {
       .catch(() => setLoading(false));
   }, [projectId]);
 
+  // Charger toutes les personnes pour le dropdown
+  useEffect(() => {
+    fetch(`http://localhost:8080/api/person`)
+      .then(res => res.json())
+      .then(data => setAvailablePersons(data || []));
+  }, []);
+
+  const handleAddClick = () => {
+    setAdding(true);
+    setAddValue({ personId: "", checked: false });
+  };
+
+  const handleAddChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type, checked } = e.target;
+    setAddValue(prev => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleAddSave = async () => {
+    if (!addValue.personId || !addValue.checked) return;
+    const response = await fetch(`http://localhost:8080/api/personproject`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idprojet: projectId,
+        idperson: Number(addValue.personId),
+      }),
+    });
+    const result = await response.json();
+    if (response.ok) {
+      // Recharge la liste
+      fetch(`http://localhost:8080/api/personproject/${projectId}`)
+        .then(res => res.json())
+        .then(data => setAssigned(data.persons || []));
+      setAdding(false);
+    } else {
+      alert("Erreur lors de l'ajout de la personne: " + (result?.error || JSON.stringify(result)));
+    }
+  };
+
+  const handleAddCancel = () => {
+    setAdding(false);
+    setAddValue({ personId: "", checked: false });
+  };
+
   if (loading) return <div>Chargement...</div>;
-  if (!assigned.length) return <div>Aucune personne assignée.</div>;
+  if (!assigned.length && !adding) return (
+    <div className="p-4">
+      <button
+        className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 mb-2"
+        onClick={handleAddClick}
+        disabled={adding}
+      >
+        Ajouter une personne
+      </button>
+      <div>Aucune personne assignée.</div>
+    </div>
+  );
 
   return (
     <div className="p-4">
-      <h5 className="font-bold mb-2">Personnes assignées au projet</h5>
+      <div className="mb-2">
+        <button
+          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+          onClick={handleAddClick}
+          disabled={adding}
+        >
+          Ajouter une personne
+        </button>
+      </div>
       <div className="overflow-x-auto">
         <table className="min-w-full border text-sm rounded-lg overflow-hidden">
           <thead>
@@ -301,6 +370,48 @@ const AssignedList = ({ projectId }: { projectId: number }) => {
             </tr>
           </thead>
           <tbody>
+            {/* Ligne d'ajout */}
+            {adding && (
+              <tr className="bg-green-50 dark:bg-gray-700">
+                <td className="px-4 py-2 border" colSpan={2}>
+                  <input
+                    type="checkbox"
+                    checked={addValue.checked}
+                    onChange={handleAddChange}
+                    name="checked"
+                    className="mr-2"
+                  />
+                  <select
+                    name="personId"
+                    value={addValue.personId}
+                    onChange={handleAddChange}
+                    className="border rounded px-2 py-1 w-2/3"
+                  >
+                    <option value="">Choisir une personne...</option>
+                    {availablePersons.map((person: any) => (
+                      <option key={person.id} value={person.id}>
+                        {person.name} {person.firstname}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td className="px-4 py-2 border" colSpan={3}>
+                  <button
+                    className="text-green-600 hover:underline mr-2"
+                    onClick={handleAddSave}
+                    disabled={!addValue.checked || !addValue.personId}
+                  >
+                    Valider
+                  </button>
+                  <button
+                    className="text-gray-600 hover:underline"
+                    onClick={handleAddCancel}
+                  >
+                    Annuler
+                  </button>
+                </td>
+              </tr>
+            )}
             {assigned.map((person, idx) => (
               <tr key={person.idperson || idx} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td className="px-4 py-2 border">{person.name}</td>

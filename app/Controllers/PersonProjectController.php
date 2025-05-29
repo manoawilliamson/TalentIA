@@ -11,56 +11,101 @@ use App\Models\V_RecomPersonModel;
 class PersonProjectController extends Controller
 {
     public function show($idproject)
-{
-    $model = new V_PersonProjectModel();
-    $result = $model->getPersonsByProject($idproject);
-
-    return $this->response->setJSON([
-        'persons' => $result
-    ]);
-}
-
-
-    public function store()
     {
-        $idproject= $this->request->getPost('idproject');
-        $rules = [
-            'idproject' => 'required'
-        ];
-        $errors = [
-            'idproject' => [
-                'required' => "Champ skills ne doit pas etre vide"
-            ]
-        ];
+        $model = new V_PersonProjectModel();
+        $result = $model->getPersonsByProject($idproject);
 
-        if (!$this->validate($rules, $errors)) {
-            $personModel = new PersonModel();
-            return view('personprojects/create', [
-                "validation" => $this->validator,
-                "idproject" => $idproject,
-                "persons" => $personModel->findAll()
-            ]);
-        }
-
-        try {
-            $personProjectModel = new PersonProjectModel();
-            $data = [
-                'idproject' => $idproject,
-                'idskill' => $this->request->getPost('idskills')
-            ];
-
-            $personProjectModel->insert($data);
-            return redirect()->to(base_url('project/fiche/' . $idproject));
-        } catch (\Exception $e) {
-            $personModel = new PersonModel();
-            return view('projectskills/create', [
-                "validation" => $this->validator,
-                "idproject" => $idproject,
-                "person" => $personModel->findAll(),
-                "error" => $e->getMessage()
-            ]);
-        }
+        return $this->response->setJSON([
+            'persons' => $result
+        ]);
     }
+
+
+
+public function store()
+{
+    // Accepte JSON ou x-www-form-urlencoded
+    $input = $this->request->getJSON(true) ?? $this->request->getPost();
+
+    $rules = [
+        'idprojet' => 'required',
+        'idperson' => 'required'
+    ];
+    $errors = [
+        'idprojet' => [
+            'required' => "Champ projet requis"
+        ],
+        'idskills' => [
+            'idperson' => "Champ skills ne doit pas être vide"
+        ]
+    ];
+
+    if (!$this->validate($rules, $errors)) {
+        return $this->response->setJSON([
+            "validation" => $this->validator->getErrors()
+        ])->setStatusCode(400);
+    }
+
+    try {
+        $personProjectModel = new PersonProjectModel();
+
+        // Vérifie si la personne est déjà associée à ce projet
+        $existingSkill = $personProjectModel
+            ->where('idproject', $input['idprojet'])
+            ->where('idperson', $input['idperson'])
+            ->first();
+
+        if ($existingSkill) {
+            return $this->response->setJSON([
+                "error" => "Personne déjà associée à ce projet."
+            ])->setStatusCode(409);
+        }
+
+        // Vérifie le nombre de personnes déjà assignées au projet
+        $currentCount = $personProjectModel
+            ->where('idproject', $input['idprojet'])
+            ->countAllResults();
+
+        // Récupère la limite depuis le projet
+        $projectModel = new \App\Models\ProjectModel();
+        $project = $projectModel->find($input['idprojet']);
+        if (!$project) {
+            return $this->response->setJSON([
+                "error" => "Projet introuvable."
+            ])->setStatusCode(404);
+        }
+        $maxPerson = isset($project['nbrperson']) ? (int)$project['nbrperson'] : 0;
+
+        if ($maxPerson > 0 && $currentCount >= $maxPerson) {
+            return $this->response->setJSON([
+                "error" => "Le nombre maximum de personnes pour ce projet est déjà atteint."
+            ])->setStatusCode(400);
+        }
+
+        $data = [
+            'idproject' => $input['idprojet'],
+            'idperson' => $input['idperson']
+        ];
+
+        $insertId = $personProjectModel->insert($data);
+        if ($insertId) {
+            $newPerson = $personProjectModel->find($insertId);
+            return $this->response->setJSON([
+                "message" => "Personne ajouté avec succès",
+                "idpersonproject" => $insertId,
+                "personne" => $insertId
+            ])->setStatusCode(201);
+        } else {
+            return $this->response->setJSON([
+                "error" => "Erreur lors de l'insertion"
+            ])->setStatusCode(500);
+        }
+    } catch (\Exception $e) {
+        return $this->response->setJSON([
+            "error" => $e->getMessage()
+        ])->setStatusCode(500);
+    }
+}
 
     public function recommendation($idproject)
     {
