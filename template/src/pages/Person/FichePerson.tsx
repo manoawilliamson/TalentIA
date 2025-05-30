@@ -1,75 +1,208 @@
-import React, { useState } from 'react';
+import React, { useState,useMemo } from 'react';
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    Tooltip,
+    CartesianGrid,
+    ResponsiveContainer,
+    Legend
+} from 'recharts';
 
-// ...interface Person et FichePersonProps...
 
-const DummyGraph = () => (
-    <div className="flex items-center justify-center h-64 bg-gradient-to-r from-blue-100 to-blue-200 rounded-lg shadow-inner">
-        <span className="text-blue-400 text-lg font-semibold">[Graphique ici]</span>
-    </div>
-);
+export interface MonthlyAverage {
+    month: string;
+    average_skill: string;
+}
 
-const AdvancedTable = () => {
-    // Données fictives
-    const rows = [
-        { year: "2023", score: 85 },
-        { year: "2024", score: 92 },
-        { year: "2025", score: 88 },
-    ];
+export interface PersonSkillHistory {
+    personskills: any[];
+    monthlyAverages: any[];
+}
 
-    // États pour les filtres
-    const [yearFilter, setYearFilter] = useState('');
-    const [scoreFilter, setScoreFilter] = useState('');
+const Graphique = ({ personskills }: { personskills: PersonSkill[] }) => {
+    // Filtres date et compétence
+    const today = new Date().toISOString().slice(0, 10);
+    const [dateStart, setDateStart] = useState(today);
+    const [dateEnd, setDateEnd] = useState(today);
+    const [skillFilter, setSkillFilter] = useState('');
 
-    // Filtrage dynamique
-    const filteredRows = rows.filter(row =>
-        row.year.includes(yearFilter) &&
-        row.score.toString().includes(scoreFilter)
+    // uniqueSkills n'est plus utilisé pour le champ libre
+
+    const filteredSkills = useMemo(
+        () =>
+            (personskills ?? []).filter(
+                s =>
+                    s.dateupdate >= dateStart &&
+                    s.dateupdate <= dateEnd &&
+                    (skillFilter === '' || s.skill.toLowerCase().includes(skillFilter.toLowerCase()))
+            ),
+        [personskills, dateStart, dateEnd, skillFilter]
+    );
+
+    // Données pour le graphe (groupées par date et compétence)
+    const graphData = useMemo(() => {
+        const map: { [date: string]: { [skill: string]: number } } = {};
+        filteredSkills.forEach(s => {
+            if (!map[s.dateupdate]) map[s.dateupdate] = {};
+            map[s.dateupdate][s.skill] = Number(s.noteskill);
+        });
+        return Object.entries(map).map(([date, skills]) => ({
+            date,
+            ...skills
+        }));
+    }, [filteredSkills]);
+
+    // Récupère toutes les compétences présentes dans les données filtrées
+    const skillsInData = useMemo(
+        () => Array.from(new Set(filteredSkills.map(s => s.skill))),
+        [filteredSkills]
     );
 
     return (
-        <div className="overflow-x-auto">
-            <table className="min-w-full border mt-4 rounded-lg overflow-hidden shadow">
-                <thead>
-                    <tr className="bg-blue-50">
-                        <th className="border px-4 py-3 text-left">
-                            Année
-                            <input
-                                type="text"
-                                value={yearFilter}
-                                onChange={e => setYearFilter(e.target.value)}
-                                placeholder="Filtrer"
-                                className="block mt-2 px-2 py-1 border border-blue-200 rounded w-24 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+        <div>
+            <div className="flex flex-wrap gap-4 mb-4">
+                <div>
+                    <label className="block text-sm font-medium text-blue-700">Date début</label>
+                    <input
+                        type="date"
+                        value={dateStart}
+                        onChange={e => setDateStart(e.target.value)}
+                        className="border rounded px-2 py-1 w-40"
+                        max={dateEnd}
+                        required
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-blue-700">Date fin</label>
+                    <input
+                        type="date"
+                        value={dateEnd}
+                        onChange={e => setDateEnd(e.target.value)}
+                        className="border rounded px-2 py-1 w-40"
+                        min={dateStart}
+                        required
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-blue-700">Compétence</label>
+                    <input
+                        type="text"
+                        value={skillFilter}
+                        onChange={e => setSkillFilter(e.target.value)}
+                        className="border rounded px-2 py-1 w-40"
+                        placeholder="Filtrer par compétence"
+                    />
+                </div>
+            </div>
+            <div className="bg-blue-50 rounded-lg p-4">
+                <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={graphData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis domain={[0, 10]} />
+                        <Tooltip />
+                        <Legend />
+                        {skillsInData.map(skill => (
+                            <Line
+                                key={skill}
+                                type="monotone"
+                                dataKey={skill}
+                                stroke="#2563eb"
+                                dot={{ r: 4 }}
+                                activeDot={{ r: 6 }}
                             />
-                        </th>
-                        <th className="border px-4 py-3 text-left">
-                            Score
-                            <input
-                                type="text"
-                                value={scoreFilter}
-                                onChange={e => setScoreFilter(e.target.value)}
-                                placeholder="Filtrer"
-                                className="block mt-2 px-2 py-1 border border-blue-200 rounded w-24 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-                            />
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {filteredRows.length === 0 ? (
-                        <tr>
-                            <td colSpan={2} className="border px-4 py-4 text-center text-gray-400 bg-gray-50">
-                                Aucun résultat
-                            </td>
+                        ))}
+                    </LineChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
+    );
+};
+
+const AdvancedTable = ({ personskills }: { personskills: PersonSkill[] }) => {
+    // Filtres date et compétence
+    const today = new Date().toISOString().slice(0, 10);
+    const [dateStart, setDateStart] = useState(today);
+    const [dateEnd, setDateEnd] = useState(today);
+    const [skillFilter, setSkillFilter] = useState('');
+
+    const filteredSkills = useMemo(
+        () =>
+            (personskills ?? []).filter(
+                s =>
+                    s.dateupdate >= dateStart &&
+                    s.dateupdate <= dateEnd &&
+                    (skillFilter === '' || s.skill.toLowerCase().includes(skillFilter.toLowerCase()))
+            ),
+        [personskills, dateStart, dateEnd, skillFilter]
+    );
+
+    return (
+        <div>
+            <div className="flex flex-wrap gap-4 mb-4">
+                <div>
+                    <label className="block text-sm font-medium text-blue-700">Date début</label>
+                    <input
+                        type="date"
+                        value={dateStart}
+                        onChange={e => setDateStart(e.target.value)}
+                        className="border rounded px-2 py-1 w-40"
+                        max={dateEnd}
+                        required
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-blue-700">Date fin</label>
+                    <input
+                        type="date"
+                        value={dateEnd}
+                        onChange={e => setDateEnd(e.target.value)}
+                        className="border rounded px-2 py-1 w-40"
+                        min={dateStart}
+                        required
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-blue-700">Compétence</label>
+                    <input
+                        type="text"
+                        value={skillFilter}
+                        onChange={e => setSkillFilter(e.target.value)}
+                        className="border rounded px-2 py-1 w-40"
+                        placeholder="Filtrer par compétence"
+                    />
+                </div>
+            </div>
+            <div className="overflow-x-auto">
+                <table className="min-w-full border mt-4 rounded-lg overflow-hidden shadow">
+                    <thead>
+                        <tr className="bg-blue-50">
+                            <th className="border px-4 py-3">Compétence</th>
+                            <th className="border px-4 py-3">Note</th>
+                            <th className="border px-4 py-3">Date</th>
                         </tr>
-                    ) : (
-                        filteredRows.map((row, idx) => (
-                            <tr key={idx} className="hover:bg-blue-50 transition">
-                                <td className="border px-4 py-3">{row.year}</td>
-                                <td className="border px-4 py-3">{row.score}</td>
+                    </thead>
+                    <tbody>
+                        {filteredSkills.length === 0 ? (
+                            <tr>
+                                <td colSpan={3} className="border px-4 py-4 text-center text-gray-400 bg-gray-50">
+                                    Aucun résultat
+                                </td>
                             </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
+                        ) : (
+                            filteredSkills.map((row, idx) => (
+                                <tr key={idx} className="hover:bg-blue-50 transition">
+                                    <td className="border px-4 py-3">{row.skill}</td>
+                                    <td className="border px-4 py-3">{row.noteskill}</td>
+                                    <td className="border px-4 py-3">{row.dateupdate}</td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 };
@@ -118,8 +251,8 @@ const FichePerson: React.FC<FichePersonProps> = ({ data }) => {
                     {data.address && <li><span className="font-semibold text-blue-600">Adresse :</span> {data.address}</li>}
                 </ul>
             )}
-            {tab === 1 && <DummyGraph />}
-            {tab === 2 && <AdvancedTable />}
+            {tab === 1 && <Graphique personskills={data.personskills} />}
+            {tab === 2 && <AdvancedTable personskills={data.personskills} />}
         </div>
     );
 };

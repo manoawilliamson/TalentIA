@@ -82,4 +82,25 @@ class PersonSkillsController extends Controller
         // var_dump($data);
         return view('person/history', $data);
     }
+
+    public function historys($id)
+    {
+        $personModel = new PersonModel();
+        $person = $personModel->find($id);
+
+        if (!$person) {
+            return $this->response->setJSON([
+                'error' => 'Personne non trouvée'
+            ])->setStatusCode(404);
+        }
+
+        $v_personSkillsModel = new V_PersonSkillsModel();
+        $data = [
+            // 'persons' => $person,
+            'personskills' => $v_personSkillsModel->getHistorySkillsPerson($id),
+            'monthlyAverages' => $v_personSkillsModel->getMonthlySkillAverages($id)
+        ];
+
+        return $this->response->setJSON($data)->setStatusCode(200);
+    }
 }

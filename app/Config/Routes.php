@@ -144,6 +144,7 @@ $routes->group('api', function ($routes) {
         $routes->get('(:num)', 'Api\PersonSkillsController::show/$1');     // Détail d'une personskill
         $routes->post('/', 'Api\PersonSkillsController::create');          // Création d'une personskill
         $routes->put('(:num)', 'Api\PersonSkillsController::update/$1');   // Modification d'une personskill
+        $routes->get('history/(:num)', 'PersonSkillsController::historys/$1');
         $routes->delete('(:num)', 'Api\PersonSkillsController::delete/$1'); // Suppression d'une personskill
     });
 

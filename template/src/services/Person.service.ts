@@ -12,6 +12,10 @@ export interface Person {
     email: string;
     telephone: string;
 }
+export interface PersonSkillHistory {
+    personskills: any[];
+    monthlyAverages: any[];
+}
 
 export const getPersons = async (): Promise<Person[]> => {
     const response = await axios.get<Person[]>(API_URL);
@@ -20,6 +24,12 @@ export const getPersons = async (): Promise<Person[]> => {
 
 export const getPersonById = async (id: number): Promise<Person> => {
     const response = await axios.get<Person>(`${API_URL}/${id}`);
+    return response.data;
+};
+
+export const getPersonSkillHistory = async (id: number): Promise<PersonSkillHistory> => {
+    const response = await axios.get<PersonSkillHistory>(`${API_PERSONSKILLS_URL}/history/${id}`);
+    console.log('PersonSkillHistory data:', response.data);
     return response.data;
 };
 
