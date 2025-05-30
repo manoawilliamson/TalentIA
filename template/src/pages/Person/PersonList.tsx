@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { getPersons, deletePerson } from "../../services/Person.service";
+import FichePerson from "./FichePerson";
 
 interface Person {
   id?: number;
   name: string;
   firstname: string;
-  birthday: string;
-  address: string;
+  birthday?: string;
+  address?: string;
   email: string;
-  telephone: string;
+  telephone?: string;
+  poste?: string;
+  departement?: string;
 }
 
 interface PersonListProps {
@@ -20,9 +23,19 @@ const PersonList = ({ reload, enableUpdate }: PersonListProps) => {
   const [data, setData] = useState<Person[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  // Pour le modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [ficheData, setFicheData] = useState<Person | null>(null);
+
   const updatePerson = (id?: number) => {
     const person = data.find((p) => p.id === id);
     if (person && enableUpdate) enableUpdate(person);
+  };
+
+  // Ouvre le modal fiche personne
+  const openFichePerson = (person: Person) => {
+    setFicheData(person);
+    setModalOpen(true);
   };
 
   const deletePersons = async (id?: number) => {
@@ -84,16 +97,12 @@ const PersonList = ({ reload, enableUpdate }: PersonListProps) => {
       {!isLoading &&
         data.map((person, key) => (
           <div
-            className="grid grid-cols-8 border-t border-stroke py-4.5 px-4 dark:border-strokedark md:px-6 2xl:px-7.5"
+            className="grid grid-cols-8 border-t border-stroke py-4.5 px-4 dark:border-strokedark md:px-6 2xl:px-7.5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
             key={key}
+            onClick={() => openFichePerson(person)}
           >
             <div className="col-span-1 flex items-center">
-              <p
-                onClick={() => updatePerson(person.id)}
-                className="text-sm text-yellow-500 cursor-pointer"
-              >
-                {person.id}
-              </p>
+              <p className="text-sm text-yellow-500">{person.id}</p>
             </div>
             <div className="col-span-2 flex items-center">
               <p className="text-sm text-black dark:text-white">{person.name}</p>
@@ -104,11 +113,11 @@ const PersonList = ({ reload, enableUpdate }: PersonListProps) => {
             <div className="col-span-2 flex items-center">
               <p className="text-sm text-black dark:text-white">{person.email}</p>
             </div>
-            <div className="col-span-1 flex items-center">
-              <i
-                className="text-sm cursor-pointer"
-                onClick={() => deletePersons(person.id)}
-              >
+            <div
+              className="col-span-1 flex items-center"
+              onClick={e => { e.stopPropagation(); deletePersons(person.id); }}
+            >
+              <i className="text-sm cursor-pointer">
                 <svg
                   width="25px"
                   height="25px"
@@ -130,6 +139,22 @@ const PersonList = ({ reload, enableUpdate }: PersonListProps) => {
             </div>
           </div>
         ))}
+
+      {/* Modal pour la fiche personne */}
+      {modalOpen && ficheData && (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-40">
+        <div
+          className="bg-white rounded-lg shadow-lg p-8 w-full max-w-4xl relative border-2 border-gray-400 box-border" // max-w-4xl ici
+          style={{ maxHeight: "200vh", overflowY: "auto" }}
+        >
+          <button
+            className="absolute top-2 right-2 text-xl"
+            onClick={() => setModalOpen(false)}
+          >×</button>
+          <FichePerson data={ficheData} />
+        </div>
+      </div>
+    )}
     </div>
   );
 };
