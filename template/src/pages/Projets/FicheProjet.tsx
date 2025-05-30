@@ -17,6 +17,7 @@ interface FicheProjetProps {
       nbrperson: number;
       remark: string;
       file?: string;
+      etat: string;
     };
     proskills?: { idproskills: number; idskill?: number; skill: string; noteskills: string }[];
   };
@@ -661,6 +662,26 @@ const FicheProjet = ({ data }: FicheProjetProps) => {
             <tr>
               <td className="font-semibold py-2 pr-4">Remarks</td>
               <td>{data.project.remark}</td>
+            </tr>
+            <tr>
+              <td className="font-semibold py-2 pr-4">Etat</td>
+              <td>
+                <span
+                  className={
+                    data.project.etat === "EN COURS"
+                      ? "px-2 py-1 rounded text-yellow-700 bg-yellow-100 font-semibold"
+                      : data.project.etat === "TERMINÉ"
+                        ? "px-2 py-1 rounded text-green-700 bg-green-100 font-semibold"
+                        : "px-2 py-1 rounded text-gray-700 bg-gray-100 font-semibold"
+                  }
+                >
+                  {data.project.etat === "en cours"
+                    ? "EN COURS"
+                    : data.project.etat === "termine"
+                      ? "TERMINÉ"
+                      : data.project.etat}
+                </span>
+              </td>
             </tr>
           </tbody>
         </table>

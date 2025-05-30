@@ -7,6 +7,7 @@ export interface Projet {
   nbrperson?: number;
   remark?: string;
   file?: string;
+  etat?: string;         // "En cours", "Terminé", "Annulé"
   created_at?: string;
   updated_at?: string;
 }

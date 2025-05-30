@@ -10,10 +10,11 @@ use CodeIgniter\Controller;
 class ProjectController extends Controller
 {
 
+
     public function index()
     {
         $projectModel = new ProjectModel();
-        $data = $projectModel->findAll();
+        $data = $projectModel->orderBy('dateend', 'DESC')->findAll();
         return $this->response->setJSON(['projects' => $data]);
     }
 
@@ -104,8 +105,6 @@ class ProjectController extends Controller
                 ]);
             }
         }
-
-        // Si ce n'est pas un POST, retourne la vue classique
         return view('projects/create');
     }
 
