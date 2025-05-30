@@ -9,7 +9,7 @@ class ProjectModel extends Model
 
     protected $table = 'project';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['name', 'description', 'datebegin', 'dateend', 'nbrperson', 'remark', 'file', 'created_at', 'updated_at'];
+    protected $allowedFields = ['name', 'description', 'datebegin', 'dateend', 'nbrperson', 'remark', 'file', 'etat','created_at', 'updated_at'];
 
     // Optional: You can define validation rules if needed
     // protected $validationRules = [
