@@ -163,7 +163,7 @@ function App() {
             </>
           }
         />
-        <Route
+        {/* <Route
           path="/ui/alerts"
           element={
             <>
@@ -171,7 +171,7 @@ function App() {
               <Alerts />
             </>
           }
-        />
+        /> */}
         <Route
           path="/ui/buttons"
           element={
