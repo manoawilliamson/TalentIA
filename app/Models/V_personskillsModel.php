@@ -15,7 +15,7 @@ class V_PersonSkillsModel extends Model
     {
         $query = $this->db->query(
             "SELECT DISTINCT ON (idskill) * FROM v_personskills
-                WHERE noteskill != 0 ORDER BY idskill, dateupdate DESC",
+                WHERE noteskill != 0 and idperson = ? ORDER BY idskill, dateupdate DESC",
             [$id]
         );
         $result = $query->getResult();
@@ -34,7 +34,6 @@ class V_PersonSkillsModel extends Model
                 'skill' => $row->skill,
                 'noteskill' => $row->noteskill,
                 'dateupdate' => $row->dateupdate
-
             ];
         }
         return $data;
@@ -43,7 +42,7 @@ class V_PersonSkillsModel extends Model
     {
         $query = $this->db->query(
             "SELECT skill,noteskill, DATE(dateupdate) as dateupdate FROM v_personskills
-                WHERE noteskill != 0 ORDER BY dateupdate DESC",
+                WHERE noteskill != 0 and idperson= ? ORDER BY dateupdate DESC",
             [$id]
         );
         $result = $query->getResult();

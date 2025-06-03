@@ -319,7 +319,6 @@ const AssignedList = ({ projectId }: { projectId: number }) => {
     });
     const result = await response.json();
     if (response.ok) {
-      // Recharge la liste
       fetch(`http://localhost:8080/api/personproject/${projectId}`)
         .then(res => res.json())
         .then(data => setAssigned(data.persons || []));
