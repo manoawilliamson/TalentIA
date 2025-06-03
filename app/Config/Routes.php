@@ -114,6 +114,9 @@ $routes->group('api', function ($routes) {
         $routes->put('(:num)', 'SkillController::update/$1');
         $routes->delete('(:num)', 'SkillController::delete/$1');
         $routes->get('check-exist', 'SkillController::checkExist');
+        $routes->get('nbrskill', 'SkillController::count'); 
+        $routes->get('techstat', 'SkillController::techStat'); 
+
     });
 
     $routes->group('projects', function ($routes) {
@@ -123,6 +126,10 @@ $routes->group('api', function ($routes) {
         $routes->put('(:num)', 'Api\ProjectController::update/$1');
         $routes->delete('(:num)', 'ProjectController::delete/$1');
         $routes->get('download/(:segment)', 'ProjectController::download/$1');
+        $routes->get('nbrproject', 'ProjectController::count'); 
+        $routes->get('count-by-period/(:segment)', 'ProjectController::countByPeriod/$1'); // ex: month, week, year
+        $routes->get('count-by-period', 'ProjectController::countByPeriod'); // default month
+
     });
 
     $routes->group('projectskills', function ($routes) {
@@ -134,18 +141,21 @@ $routes->group('api', function ($routes) {
     });
     $routes->group('person', function($routes){
         $routes->get('/', 'PersonController::index');           // Liste toutes les personnes
-        $routes->get('(:num)', 'PersonController::show/$1');    // Détail d'une personne
+        $routes->get('detail/(:num)', 'PersonController::detail/$1');    // Détail d'une personne
         $routes->post('/', 'PersonController::create');         // Création d'une personne
         $routes->put('(:num)', 'PersonController::update/$1');  // Modification d'une personne
         $routes->delete('(:num)', 'PersonController::delete/$1'); // Suppression d'une personne
+        $routes->get('nbrperson', 'PersonController::count'); // Suppression d'une personne
+        $routes->get('stat', 'PersonController::collabStat'); 
+
     });
     $routes->group('personskills', function ($routes) {
-        $routes->get('/', 'Api\PersonSkillsController::index');            // Liste toutes les personskills
-        $routes->get('(:num)', 'Api\PersonSkillsController::show/$1');     // Détail d'une personskill
-        $routes->post('/', 'Api\PersonSkillsController::create');          // Création d'une personskill
-        $routes->put('(:num)', 'Api\PersonSkillsController::update/$1');   // Modification d'une personskill
-        $routes->get('history/(:num)', 'PersonSkillsController::historys/$1');
-        $routes->delete('(:num)', 'Api\PersonSkillsController::delete/$1'); // Suppression d'une personskill
+        $routes->get('/', 'PersonSkillsController::index');            // Liste toutes les personskills
+        $routes->get('(:num)', 'PersonSkillsController::detail/$1');     // Détail d'une personskill
+        $routes->post('/', 'PersonSkillsController::store');          // Création d'une personskill
+        $routes->put('(:num)', 'PersonSkillsController::update/$1');   // Modification d'une personskill
+        $routes->get('history/(:num)', 'PersonSkillsController::history/$1');
+        $routes->delete('(:num)', 'PersonSkillsController::delete/$1'); // Suppression d'une personskill
     });
 
     $routes->group('personproject', function ($routes) {

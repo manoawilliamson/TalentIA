@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\PersonModel;
 use App\Models\PersonSkillsModel;
 use App\Models\V_PersonSkillsModel;
+use App\Models\V_PersonStatsModel;
 use CodeIgniter\RESTful\ResourceController;
 use DateTime;
 
@@ -137,5 +138,18 @@ class PersonController extends ResourceController
             'person' => $person,
             'personskills' => $skills
         ]);
+    }
+    
+    public function count()
+    {
+        $personModel = new PersonModel();
+        $total = $personModel->countAll();
+        return $this->respond(['count' => $total]);
+    }
+    public function collabStat()
+    {
+        $v_PersonStatsModel = new V_PersonStatsModel();
+        $result = $v_PersonStatsModel->getCollabAnalyse();
+        return $this->response->setJSON(['data' => $result]);
     }
 }

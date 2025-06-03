@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\ProjectModel;
 use App\Models\V_ProjectSkillsModel;
+use App\Models\V_ProjectTimeAnalyseModel;
 use CodeIgniter\Controller;
 
 
@@ -256,6 +257,23 @@ class ProjectController extends Controller
         // Sinon, comportement classique (HTML)
         $projectModel->delete($id);
         return redirect()->to(base_url('/projects'));
+    }
+    public function count()
+    {
+         $projectModel = new ProjectModel();
+        $total = $projectModel->countAll();
+        return $this->response->setJSON(['count' => $total]);
+    }
+    public function countByPeriod($period = 'month')
+    {
+        $v_projectTimeAnalyseModel = new V_ProjectTimeAnalyseModel();
+         $builder = $v_projectTimeAnalyseModel
+            ->select('period_value, period_display, project_count')
+            ->where('period_type', $period)
+            ->orderBy('period_display', 'ASC');
+        $results = $builder->get()->getResult();
+
+        return $this->response->setJSON(['data' => $results]);
     }
 
 

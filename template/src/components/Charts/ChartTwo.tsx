@@ -1,9 +1,8 @@
 import { ApexOptions } from 'apexcharts';
 import React, { useEffect, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
-import { getStats } from '../../services/Dashboard.service';
 
-const options: ApexOptions = {
+const baseOptions: ApexOptions = {
   colors: ['#3C50E0', '#80CAEE'],
   chart: {
     fontFamily: 'Satoshi, sans-serif',
@@ -17,7 +16,6 @@ const options: ApexOptions = {
       enabled: false,
     },
   },
-
   responsive: [
     {
       breakpoint: 1536,
@@ -43,9 +41,8 @@ const options: ApexOptions = {
   dataLabels: {
     enabled: false,
   },
-
   xaxis: {
-    categories: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+    categories: [],
   },
   legend: {
     position: 'top',
@@ -53,7 +50,6 @@ const options: ApexOptions = {
     fontFamily: 'Satoshi',
     fontWeight: 500,
     fontSize: '14px',
-
     markers: {
       radius: 99,
     },
@@ -61,46 +57,59 @@ const options: ApexOptions = {
   fill: {
     opacity: 1,
   },
+  tooltip: {
+    y: {
+      formatter: function (val: any, opts: any) {
+        // Ajoute le nombre de projets dans le tooltip
+        const data = opts.w.config.custom.projectCounts;
+        const idx = opts.dataPointIndex;
+        return `${val}% (${data && data[idx] ? data[idx] : 0} projets)`;
+      },
+      title: {
+        formatter: () => 'Pourcentage',
+      },
+    },
+  },
 };
 
-interface ChartTwoState {
-  series: {
-    name: string;
-    data: number[];
-  }[];
-}
-
 const ChartTwo: React.FC = () => {
-  const [state, setState] = useState<ChartTwoState>({
-    series: [
-      {
-        name: 'Sales',
-        data: [44, 55, 41, 67, 22, 43, 65],
-      },
-      {
-        name: 'Revenue',
-        data: [13, 23, 20, 8, 13, 27, 15],
-      },
-    ],
-  });
-  
-  const handleReset = () => {
-    setState((prevState) => ({
-      ...prevState,
-    }));
-  };
-  handleReset;  
+  const [series, setSeries] = useState([
+    {
+      name: 'Pourcentage',
+      data: [] as number[],
+    },
+  ]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [projectCounts, setProjectCounts] = useState<number[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      let result = await getStats();
-
-      console.log(result);
-    };
-
-    fetchData();
+    fetch('http://localhost:8080/api/skills/techstat')
+      .then(res => res.json())
+      .then(res => {
+        const arr = res.data || [];
+        setCategories(arr.map((x: any) => x.technology_name));
+        setProjectCounts(arr.map((x: any) => x.project_count));
+        setSeries([
+          {
+            name: 'Pourcentage',
+            data: arr.map((x: any) =>
+              Number(x.usage_percentage) ? Number(x.usage_percentage).toFixed(2) : 0
+            ),
+          },
+        ]);
+      });
   }, []);
 
+  const options: ApexOptions = {
+    ...baseOptions,
+    xaxis: {
+      ...baseOptions.xaxis,
+      categories,
+    },
+    custom: {
+      projectCounts,
+    },
+  };
 
   return (
     <div className="col-span-12 rounded-sm border border-stroke bg-white p-7.5 shadow-default dark:border-strokedark dark:bg-boxdark xl:col-span-4">
@@ -148,7 +157,7 @@ const ChartTwo: React.FC = () => {
         <div id="chartTwo" className="-ml-5 -mb-9">
           <ReactApexChart
             options={options}
-            series={state.series}
+            series={series}
             type="bar"
             height={350}
           />

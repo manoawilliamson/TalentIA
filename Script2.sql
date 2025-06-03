@@ -13,8 +13,6 @@ INSERT INTO users (name, email, password, role) VALUES
 ('Manager User', 'manager@example.com', 'root', 'manager'),
 ('Collaborator User', 'collab@example.com', 'root', 'collaborator');
 
-select * from users;
-
 CREATE TABLE skills (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -31,9 +29,6 @@ insert into skills (name, category) values ( 'R', 'Développement' );
 insert into skills (name, category) values ( 'Ruby on Rails', 'Développement' );
 insert into skills (name, category) values ( 'Smooth Talking', 'Communication' );
 
-select * from skills s ;
-
-
 
 CREATE TABLE project (
     id SERIAL PRIMARY KEY,
@@ -49,7 +44,6 @@ CREATE TABLE project (
 );
 ALTER TABLE project
 ADD COLUMN etat VARCHAR(50);
-
 UPDATE project
 SET etat = CASE
     WHEN dateEnd >= CURRENT_DATE THEN 'EN COURS'
@@ -77,7 +71,6 @@ ON project
 FOR EACH ROW
 EXECUTE FUNCTION update_project_etat();
 
-select * from project
 
 create table projectskills(
 	id serial primary key,
@@ -88,7 +81,6 @@ create table projectskills(
     FOREIGN KEY (idSkills) REFERENCES skills(id) ON DELETE CASCADE
 );
 
-select * from projectskills;
 
 create or replace view v_projectskills as
 select 
@@ -99,10 +91,8 @@ left join
 left join 
 	skills s on ps.idskills = s.id;
 
-select * from v_projectskills
-where idprojet = 4;
 
-protected $allowedFields = ['name', 'firstname','birthday','address','email','telephone'];
+
 
 create table person(
 	id serial primary key,
@@ -114,8 +104,6 @@ create table person(
 	telephone VARCHAR(255)
 );
 
-select * from person;
-delete from person where id =11 ;
 
 create table personskills(
 	id serial primary key,
@@ -127,7 +115,7 @@ create table personskills(
     FOREIGN KEY (idskill) REFERENCES skills(id) ON DELETE CASCADE
 );
 
-select* from  personskills
+
 
 create or replace view v_personskills as 
 select 
@@ -138,11 +126,12 @@ person p on p.id = ps.idperson
 left join 
 skills s on s.id = ps.idskill;
 
-select * from v_personskills;
+
+
 
 SELECT DISTINCT ON (idskill) *
 FROM v_personskills
-WHERE noteskill != 0
+WHERE noteskill != 0 and idperson = 15
 ORDER BY idskill, dateupdate DESC;
 
 select idperson, name,firstname,address,email,telephone, idskill,skill,noteskill, DATE(dateupdate) as dateupdate
@@ -223,3 +212,79 @@ LEFT JOIN
     project pr ON pr.id = pp.idproject;
 select * from v_personproject;
 
+
+CREATE OR REPLACE VIEW v_projects_time_analysis AS
+SELECT 
+    'year' AS period_type,
+    EXTRACT(YEAR FROM dateBegin) AS period_value,
+    TO_CHAR(dateBegin, 'YYYY') AS period_display,
+    COUNT(*) AS project_count
+FROM 
+    project
+GROUP BY 
+    EXTRACT(YEAR FROM dateBegin),
+    TO_CHAR(dateBegin, 'YYYY')
+UNION ALL
+SELECT 
+    'month' AS period_type,
+    EXTRACT(MONTH FROM dateBegin) AS period_value,
+    TO_CHAR(dateBegin, 'YYYY-MM') AS period_display,
+    COUNT(*) AS project_count
+FROM 
+    project
+GROUP BY 
+    EXTRACT(MONTH FROM dateBegin),
+    TO_CHAR(dateBegin, 'YYYY-MM')
+UNION ALL
+SELECT 
+    'week' AS period_type,
+    EXTRACT(WEEK FROM dateBegin) AS period_value,
+    TO_CHAR(dateBegin, 'YYYY-"W"WW') AS period_display,
+    COUNT(*) AS project_count
+FROM 
+    project
+GROUP BY 
+    EXTRACT(WEEK FROM dateBegin),
+    TO_CHAR(dateBegin, 'YYYY-"W"WW')
+ORDER BY 
+    period_type, period_display;
+
+
+CREATE OR REPLACE VIEW v_technology_usage_stats AS
+WITH total_projects AS (
+    SELECT COUNT(*) AS total FROM project
+)
+SELECT 
+    s.id AS technology_id,
+    s.name AS technology_name,
+    COUNT(ps.idProject) AS project_count,
+    COUNT(ps.idProject)::FLOAT / (SELECT total FROM total_projects) * 100 AS usage_percentage
+FROM 
+    skills s
+LEFT JOIN 
+    projectskills ps ON s.id = ps.idSkills
+GROUP BY 
+    s.id, s.name
+ORDER BY 
+    project_count DESC;
+
+
+
+CREATE OR REPLACE VIEW v_person_participation_stats AS
+WITH total_projects AS (
+    SELECT COUNT(*) AS total FROM project
+)
+SELECT 
+    p.id AS person_id,
+    CONCAT(p.name, ' ', p.firstname) AS person_name,
+    COUNT(pp.idproject) AS project_count,
+    COUNT(pp.idproject)::FLOAT / (SELECT total FROM total_projects) * 100 AS participation_percentage
+FROM 
+    person p
+LEFT JOIN 
+    personproject pp ON p.id = pp.idperson
+GROUP BY 
+    p.id, p.name, p.firstname
+ORDER BY 
+    project_count DESC;
+select * from v_personskills;

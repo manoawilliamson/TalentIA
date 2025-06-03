@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\SkillModel;
+use App\Models\V_TechnologyStatsModel;
 use CodeIgniter\Controller;
 
 class SkillController extends Controller
@@ -93,50 +94,62 @@ class SkillController extends Controller
         return view('skills/edit', $data);  // Load edit form with skill data
     }
 
-public function update($id)
-{
-    $input = $this->request->getJSON(true);
-    $skillModel = new SkillModel();
+    public function update($id)
+    {
+        $input = $this->request->getJSON(true);
+        $skillModel = new SkillModel();
 
-    $rules = [
-        'name' => 'required',
-        'category' => 'required'
-    ];
-    if (!$this->validate($rules)) {
+        $rules = [
+            'name' => 'required',
+            'category' => 'required'
+        ];
+        if (!$this->validate($rules)) {
+            return $this->response->setJSON([
+                "validation" => $this->validator->getErrors(),
+            ])->setStatusCode(400);
+        }
+
+        $skill = $skillModel->find($id);
+        if (!$skill) {
+            return $this->response->setJSON(['error' => 'Skill not found'])->setStatusCode(404);
+        }
+
+        $skillModel->update($id, $input);
+        $updatedSkill = $skillModel->find($id);
         return $this->response->setJSON([
-            "validation" => $this->validator->getErrors(),
-        ])->setStatusCode(400);
+            "message" => "Skill updated",
+            "skill" => $updatedSkill
+        ]);
     }
 
-    $skill = $skillModel->find($id);
-    if (!$skill) {
-        return $this->response->setJSON(['error' => 'Skill not found'])->setStatusCode(404);
+
+
+    public function delete($id)
+    {
+        $skillModel = new SkillModel();
+        $deleted = $skillModel->delete($id);
+
+        if ($deleted) {
+            return $this->response->setJSON([
+                "message" => "Skill supprimé avec succès"
+            ])->setStatusCode(200);
+        } else {
+            return $this->response->setJSON([
+                "error" => "Skill introuvable ou déjà supprimé"
+            ])->setStatusCode(404);
+        }
+    }
+    public function count()
+    {
+        $skillModel = new SkillModel();
+        $total = $skillModel->countAll();
+        return $this->response->setJSON(['count' => $total]);
     }
 
-    $skillModel->update($id, $input);
-    $updatedSkill = $skillModel->find($id);
-    return $this->response->setJSON([
-        "message" => "Skill updated",
-        "skill" => $updatedSkill
-    ]);
-}
-
-
-
-public function delete($id)
-{
-    $skillModel = new SkillModel();
-    $deleted = $skillModel->delete($id);
-
-    if ($deleted) {
-        return $this->response->setJSON([
-            "message" => "Skill supprimé avec succès"
-        ])->setStatusCode(200);
-    } else {
-        return $this->response->setJSON([
-            "error" => "Skill introuvable ou déjà supprimé"
-        ])->setStatusCode(404);
+    public function techStat()
+    {
+        $v_TechnologyStatsModel = new V_TechnologyStatsModel();
+        $result = $v_TechnologyStatsModel->getTechStats();
+        return $this->response->setJSON(['data' => $result]);
     }
-}
-     
 }
