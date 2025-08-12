@@ -1,2 +1,5 @@
 .env
-writable/*
+writable/*vendor/
+vendor/
+node_modules/
+.DS_Store
