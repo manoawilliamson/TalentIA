@@ -1,4 +1,4 @@
-# 🌟 TalentIA
+# 🌟 TalentIA disponible dans la branche **feature/personskills**
 
 **TalentIA** est une application web de gestion des talents et des compétences, développée avec **CodeIgniter 4** pour le backend et **React.js** avec **Tailwind CSS** pour le frontend.  
 Elle permet aux entreprises et organisations de gérer efficacement les profils, les compétences et les parcours professionnels.
