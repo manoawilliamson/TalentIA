@@ -116,4 +116,19 @@ public function store()
             'recommendations' => $result
         ]);
     }
+
+    public function delete($id)
+    {
+        $personProjectModel = new PersonProjectModel();
+        
+        if ($personProjectModel->delete($id)) {
+            return $this->response->setJSON([
+                "message" => "Personne désassignée avec succès"
+            ])->setStatusCode(200);
+        } else {
+            return $this->response->setJSON([
+                "error" => "Erreur lors de la désassignation ou enregistrement introuvable"
+            ])->setStatusCode(404);
+        }
+    }
 }

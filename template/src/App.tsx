@@ -19,8 +19,10 @@ import DefaultLayout from './layout/DefaultLayout';
 import SkillCreation from './pages/Skills/SkillCreation';
 import Skills from './pages/Skills/Index';
 import Projects from './pages/Projets/Index';
-import FicheProjet from './pages/Projets/FicheProjet';
+import FicheProjetWrapper from './pages/Projets/FicheProjetWrapper';
 import Person from './pages/Person/Index';
+import PersonSkills from './pages/Person/PersonSkills';
+import UnifiedLists from './pages/Lists/UnifiedLists';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -41,15 +43,15 @@ function App() {
     <Routes>
 
       <Route
-          index
-          element={
-            <>
-              <PageTitle title="eCommerce Dashboard | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-              {/* <ECommerce /> */}
-              <SignIn />
-            </>
-          }
-        />
+        index
+        element={
+          <>
+            <PageTitle title="eCommerce Dashboard | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+            {/* <ECommerce /> */}
+            <SignIn />
+          </>
+        }
+      />
 
       {/* Anaty template */}
       <Route
@@ -65,11 +67,29 @@ function App() {
           }
         />
         <Route
+          path='/lists'
+          element={
+            <>
+              <PageTitle title="Lists | Unified Management " />
+              <UnifiedLists />
+            </>
+          }
+        />
+        <Route
           path='/person'
           element={
             <>
               <PageTitle title="Person | Overview " />
               <Person />
+            </>
+          }
+        />
+        <Route
+          path='/person-skills'
+          element={
+            <>
+              <PageTitle title="Person Skills | Management " />
+              <PersonSkills />
             </>
           }
         />
@@ -83,11 +103,11 @@ function App() {
           }
         />
         <Route
-          path='/fiche'
+          path='/fiche/:id'
           element={
             <>
               <PageTitle title="Projet | Fiche " />
-              <FicheProjet />
+              <FicheProjetWrapper />
             </>
           }
         />
@@ -220,7 +240,7 @@ function App() {
     //         </>
     //       }
     //     />
-        
+
     //   </Routes>
     // </DefaultLayout>
   );

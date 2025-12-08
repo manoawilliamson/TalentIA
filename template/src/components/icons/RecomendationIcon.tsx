@@ -11,6 +11,7 @@ const RecomendationIcon = ( props: RecomendationIconProps ) => {
       y="0px"
       className={props.classes}
       viewBox="0 0 100 125"
+      fill="currentColor"
     >
       <switch>
         <foreignObject

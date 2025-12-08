@@ -143,7 +143,8 @@ const validate = () => {
                 name="name"
                 value={person.name}
                 onChange={handleChange}
-                className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none"
+                className="standard-input"
+                placeholder="Enter name"
               />
               {errors.name && <span className="error-message text-red-500">{errors.name}</span>}
             </div>
@@ -155,7 +156,8 @@ const validate = () => {
                 name="firstname"
                 value={person.firstname}
                 onChange={handleChange}
-                className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none"
+                className="standard-input"
+                placeholder="Enter first name"
               />
               {errors.firstname && <span className="error-message text-red-500">{errors.firstname}</span>}
             </div>
@@ -167,7 +169,7 @@ const validate = () => {
                 name="birthday"
                 value={person.birthday}
                 onChange={handleChange}
-                className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none"
+                className="standard-input"
               />
               {errors.birthday && <span className="error-message text-red-500">{errors.birthday}</span>}
             </div>
@@ -179,7 +181,8 @@ const validate = () => {
                 name="address"
                 value={person.address}
                 onChange={handleChange}
-                className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none"
+                className="standard-input"
+                placeholder="Enter address"
               />
               {errors.address && <span className="error-message text-red-500">{errors.address}</span>}
             </div>
@@ -191,7 +194,8 @@ const validate = () => {
                 name="email"
                 value={person.email}
                 onChange={handleChange}
-                className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none"
+                className="standard-input"
+                placeholder="Enter email"
               />
               {errors.email && <span className="error-message text-red-500">{errors.email}</span>}
             </div>
@@ -203,7 +207,8 @@ const validate = () => {
                 name="telephone"
                 value={person.telephone}
                 onChange={handleChange}
-                className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none"
+                className="standard-input"
+                placeholder="Enter telephone"
               />
               {errors.telephone && <span className="error-message text-red-500">{errors.telephone}</span>}
             </div>

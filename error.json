@@ -1,0 +1,135 @@
+{
+    "title": "CodeIgniter\\HTTP\\Exceptions\\HTTPException",
+    "type": "CodeIgniter\\HTTP\\Exceptions\\HTTPException",
+    "code": 500,
+    "message": "Failed to parse JSON string. Error: Syntax error",
+    "file": "/Users/williamson/Desktop/TalentIA/system/HTTP/IncomingRequest.php",
+    "line": 537,
+    "trace": [
+        {
+            "file": "/Users/williamson/Desktop/TalentIA/system/HTTP/IncomingRequest.php",
+            "line": 537,
+            "function": "forInvalidJSON",
+            "class": "CodeIgniter\\HTTP\\Exceptions\\HTTPException",
+            "type": "::",
+            "args": [
+                "Syntax error"
+            ]
+        },
+        {
+            "file": "/Users/williamson/Desktop/TalentIA/app/Controllers/ProjectController.php",
+            "line": 36,
+            "function": "getJSON",
+            "class": "CodeIgniter\\HTTP\\IncomingRequest",
+            "type": "->",
+            "args": [
+                true
+            ]
+        },
+        {
+            "file": "/Users/williamson/Desktop/TalentIA/system/CodeIgniter.php",
+            "line": 933,
+            "function": "store",
+            "class": "App\\Controllers\\ProjectController",
+            "type": "->",
+            "args": []
+        },
+        {
+            "file": "/Users/williamson/Desktop/TalentIA/system/CodeIgniter.php",
+            "line": 509,
+            "function": "runController",
+            "class": "CodeIgniter\\CodeIgniter",
+            "type": "->",
+            "args": [
+                {}
+            ]
+        },
+        {
+            "file": "/Users/williamson/Desktop/TalentIA/system/CodeIgniter.php",
+            "line": 355,
+            "function": "handleRequest",
+            "class": "CodeIgniter\\CodeIgniter",
+            "type": "->",
+            "args": [
+                null,
+                {
+                    "handler": "file",
+                    "backupHandler": "dummy",
+                    "storePath": "/Users/williamson/Desktop/TalentIA/writable/cache/",
+                    "prefix": "",
+                    "ttl": 60,
+                    "reservedCharacters": "{}()/\\@:",
+                    "file": {
+                        "storePath": "/Users/williamson/Desktop/TalentIA/writable/cache/",
+                        "mode": 416
+                    },
+                    "memcached": {
+                        "host": "127.0.0.1",
+                        "port": 11211,
+                        "weight": 1,
+                        "raw": false
+                    },
+                    "redis": {
+                        "host": "127.0.0.1",
+                        "password": null,
+                        "port": 6379,
+                        "timeout": 0,
+                        "database": 0
+                    },
+                    "validHandlers": {
+                        "dummy": "CodeIgniter\\Cache\\Handlers\\DummyHandler",
+                        "file": "CodeIgniter\\Cache\\Handlers\\FileHandler",
+                        "memcached": "CodeIgniter\\Cache\\Handlers\\MemcachedHandler",
+                        "predis": "CodeIgniter\\Cache\\Handlers\\PredisHandler",
+                        "redis": "CodeIgniter\\Cache\\Handlers\\RedisHandler",
+                        "wincache": "CodeIgniter\\Cache\\Handlers\\WincacheHandler"
+                    },
+                    "cacheQueryString": false
+                },
+                false
+            ]
+        },
+        {
+            "file": "/Users/williamson/Desktop/TalentIA/system/Boot.php",
+            "line": 325,
+            "function": "run",
+            "class": "CodeIgniter\\CodeIgniter",
+            "type": "->",
+            "args": []
+        },
+        {
+            "file": "/Users/williamson/Desktop/TalentIA/system/Boot.php",
+            "line": 67,
+            "function": "runCodeIgniter",
+            "class": "CodeIgniter\\Boot",
+            "type": "::",
+            "args": [
+                {}
+            ]
+        },
+        {
+            "file": "/Users/williamson/Desktop/TalentIA/public/index.php",
+            "line": 56,
+            "function": "bootWeb",
+            "class": "CodeIgniter\\Boot",
+            "type": "::",
+            "args": [
+                {
+                    "systemDirectory": "/Users/williamson/Desktop/TalentIA/app/Config/../../system",
+                    "appDirectory": "/Users/williamson/Desktop/TalentIA/app/Config/..",
+                    "writableDirectory": "/Users/williamson/Desktop/TalentIA/app/Config/../../writable",
+                    "testsDirectory": "/Users/williamson/Desktop/TalentIA/app/Config/../../tests",
+                    "viewDirectory": "/Users/williamson/Desktop/TalentIA/app/Config/../Views"
+                }
+            ]
+        },
+        {
+            "file": "/Users/williamson/Desktop/TalentIA/system/rewrite.php",
+            "line": 44,
+            "args": [
+                "/Users/williamson/Desktop/TalentIA/public/index.php"
+            ],
+            "function": "require_once"
+        }
+    ]
+}

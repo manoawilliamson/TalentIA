@@ -184,4 +184,21 @@ class PersonSkillsController extends Controller
 
         return $this->response->setJSON($data)->setStatusCode(200);
     }
+
+    public function delete($id)
+    {
+        $personSkillsModel = new PersonSkillsModel();
+        
+        if ($personSkillsModel->delete($id)) {
+            return $this->respond([
+                'status' => 'success',
+                'message' => 'Skill supprimé avec succès'
+            ], 200);
+        } else {
+            return $this->respond([
+                'status' => 'error',
+                'message' => 'Skill introuvable ou erreur lors de la suppression'
+            ], 404);
+        }
+    }
 }

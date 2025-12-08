@@ -20,13 +20,14 @@ class V_ProjectSkillsModel extends Model
         foreach ($result as $row) {
             $data[] = [
                 'idprojet' => $row->idprojet,
-                'name' => $row->name,
+                'project_name' => $row->name,
                 'description' => $row->description,
                 'datebegin' => $row->datebegin,
                 'dateend' => $row->dateend,
                 'nbrperson' => $row->nbrperson,
                 'remark' => $row->remark,
                 'idskills' => $row->idskills,
+                'name' => $row->skill,
                 'skill' => $row->skill,
                 'noteskills' => $row->noteskills,
                 'file' => $row->file

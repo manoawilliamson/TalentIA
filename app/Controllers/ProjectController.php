@@ -27,18 +27,29 @@ class ProjectController extends Controller
     public function store()
     {
         if ($this->request->getMethod(true) === 'POST') {
+            // Check if it's an API request (JSON)
+            $isApi = strpos($this->request->getHeaderLine('Content-Type'), 'application/json') !== false ||
+                     strpos($this->request->getHeaderLine('Accept'), 'application/json') !== false;
+
+            $isJsonRequest = strpos($this->request->getHeaderLine('Content-Type'), 'application/json') !== false;
+
+            if ($isApi && $isJsonRequest) {
+                // For API, merge JSON data into POST data for validation
+                $jsonData = $this->request->getJSON(true);
+                $this->request->setGlobal('post', array_merge($this->request->getPost(), $jsonData));
+            }
+
             $rules = [
                 'name' => 'required',
                 'description' => 'required',
                 'datebegin' => 'required',
                 'dateend' => 'required',
-                'nbrperson' => 'required|integer|greater_than[0]',
-                'remark' => 'required'
+                'nbrperson' => 'required|integer|greater_than[0]'
             ];
 
             if (!$this->validate($rules)) {
                 // Si c'est une requête AJAX/API (React), retourne JSON
-                if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
+                if ($isApi) {
                     return $this->response->setStatusCode(422)
                         ->setJSON(['errors' => $this->validator->getErrors()]);
                 }
@@ -56,7 +67,7 @@ class ProjectController extends Controller
                 if ($file && $file->isValid() && !$file->hasMoved()) {
                     if ($file->getSize() > 2097152) { // 2MB max
                         $errorMsg = 'Fichier trop volumineux';
-                        if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
+                        if ($isApi) {
                             return $this->response->setStatusCode(400)
                                 ->setJSON(['error' => $errorMsg]);
                         }
@@ -67,16 +78,18 @@ class ProjectController extends Controller
                 }
 
                 $data = [
-                    'name' => $this->request->getPost('name'),
-                    'description' => $this->request->getPost('description'),
-                    'datebegin' => $this->request->getPost('datebegin'),
-                    'dateend' => $this->request->getPost('dateend'),
-                    'nbrperson' => $this->request->getPost('nbrperson'),
-                    'remark' => $this->request->getPost('remark'),
+                    'name' => $isJsonRequest ? $this->request->getJSON()->name : $this->request->getPost('name'),
+                    'description' => $isJsonRequest ? $this->request->getJSON()->description : $this->request->getPost('description'),
+                    'datebegin' => $isJsonRequest ? $this->request->getJSON()->datebegin : $this->request->getPost('datebegin'),
+                    'dateend' => $isJsonRequest ? $this->request->getJSON()->dateend : $this->request->getPost('dateend'),
+                    'nbrperson' => $isJsonRequest ? $this->request->getJSON()->nbrperson : $this->request->getPost('nbrperson'),
+                    'remark' => $isJsonRequest ? $this->request->getJSON()->remark : $this->request->getPost('remark'),
                     'file' => $newName,
                 ];
 
-                if (!$projectModel->insert($data)) {
+                $insertedId = $projectModel->insert($data);
+                
+                if (!$insertedId) {
                     $errorMsg = 'Erreur lors de l\'insertion';
                     if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
                         return $this->response->setStatusCode(500)
@@ -91,7 +104,7 @@ class ProjectController extends Controller
                 // Succès : JSON pour API, redirect pour HTML
                 if ($this->request->isAJAX() || $this->request->getHeaderLine('Accept') === 'application/json') {
                     return $this->response->setStatusCode(201)
-                        ->setJSON(['success' => true, 'project' => $data]);
+                        ->setJSON(['success' => true, 'id' => $insertedId, 'project' => $data]);
                 }
                 return redirect()->to(base_url('projects'));
             } catch (\Throwable $e) {
@@ -134,14 +147,55 @@ class ProjectController extends Controller
 
     public function update($id)
     {
+        $method = $this->request->getMethod(true);
+        
+        // Handle API requests (PUT with JSON)
+        if ($method === 'PUT') {
+            $input = $this->request->getJSON(true);
+            
+            $rules = [
+                'name' => 'required',
+                'description' => 'required',
+                'datebegin' => 'required',
+                'dateend' => 'required',
+                'nbrperson' => 'required|integer|greater_than[0]'
+            ];
+
+            $this->request->setGlobal('post', $input);
+            
+            if (!$this->validate($rules)) {
+                return $this->response->setStatusCode(422)
+                    ->setJSON(['errors' => $this->validator->getErrors()]);
+            }
+
+            try {
+                $projectModel = new ProjectModel();
+                $data = [
+                    'name' => $input['name'],
+                    'description' => $input['description'],
+                    'datebegin' => $input['datebegin'],
+                    'dateend' => $input['dateend'],
+                    'nbrperson' => $input['nbrperson'],
+                    'remark' => $input['remark'],
+                ];
+
+                $projectModel->update($id, $data);
+                return $this->response->setStatusCode(200)
+                    ->setJSON(['success' => true, 'message' => 'Projet mis à jour']);
+            } catch (\Exception $e) {
+                return $this->response->setStatusCode(500)
+                    ->setJSON(['error' => $e->getMessage()]);
+            }
+        }
+        
+        // Handle traditional POST form requests
         if ($this->request->getMethod(true) === 'POST') {
             $rules = [
                 'name' => 'required',
                 'description' => 'required',
                 'datebegin' => 'required',
                 'dateend' => 'required',
-                'nbrperson' => 'required|integer|greater_than[0]',
-                'remark' => 'required'
+                'nbrperson' => 'required|integer|greater_than[0]'
             ];
 
             $errors = [
@@ -159,8 +213,7 @@ class ProjectController extends Controller
                     'required' => "Champ number person ne doit pas etre vide",
                     'integer' => "Number person doit être un nombre entier",
                     'greater_than' => "Number person doit être un nombre entier positif"
-                ],
-                'remark' => ['required' => "Champ remarque ne doit pas etre vide"]
+                ]
             ];
 
             if (!$this->validate($rules, $errors)) {

@@ -39,10 +39,9 @@ class preload
             'include' => __DIR__ . '/vendor/codeigniter4/framework/system', // Change this path if using manual installation
             'exclude' => [
                 // Not needed if you don't use them.
-                '/system/Database/OCI8/',
-                '/system/Database/Postgre/',
-                '/system/Database/SQLite3/',
-                '/system/Database/SQLSRV/',
+                '/Database/OCI8/',
+                '/Database/SQLite3/',
+                '/Database/SQLSRV/',
                 // Not needed for web apps.
                 '/system/Database/Seeder.php',
                 '/system/Test/',

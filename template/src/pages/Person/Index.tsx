@@ -1,55 +1,48 @@
 import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Breadcrumb from "../../components/Breadcrumbs/Breadcrumb";
 import SkillCreation from "./PersonCreation";
-import SkillList from "./PersonList";
-import { Skill } from "../../types/skill";
 
 const Person = () => {
-
-    const [reload, setReload] = useState<boolean>(false);
+    const navigate = useNavigate();
+    const location = useLocation();
     const [reloadCreation, setReloadCreation] = useState<boolean>(false);
-    const [launchUpdate, setLaunchUpdate] = useState<boolean>(false);
-    const [updateData, setUpdateData] = useState<Skill | null>(null);
-
-    const reloadDownload = () => {
-        setReload(true);
-    };
-
-
-    const enableUpdate = ( skill: Skill ) => {
-        setUpdateData(skill);
-        setReloadCreation(true);
-        setLaunchUpdate(true);
-    };
-
-    useEffect(()=>{
-        return () => {
-            setReload(false)
-        }
-    }, [reload]);
+    
+    // Get navigation state for editing
+    const state = location.state as { toUpdateData?: any; isUpdate?: boolean } || {};
+    const { toUpdateData, isUpdate } = state;
 
     useEffect(()=>{
         return () => {
             setReloadCreation(false);
-            // setLaunchUpdate(false);
         }
-    }, [updateData]);
-    
+    }, [reloadCreation]);
 
     return (
         <>
-            <Breadcrumb pageName="Personnes - Overview" />
+            <Breadcrumb pageName="Collaborators - Overview" />
     
-            <div className="grid grid-cols-1 gap-9 sm:grid-cols-2">
+            <div className="flex flex-col gap-9">
+                {/* Creation Form */}
                 <div className="flex flex-col gap-9">
-                    <SkillCreation reload={reloadCreation} toUpdateData={updateData} isUpdate={launchUpdate} reloadTrigger={reloadDownload} />
+                    <SkillCreation reload={reloadCreation} toUpdateData={toUpdateData} isUpdate={isUpdate} reloadTrigger={() => setReloadCreation(true)} />
                 </div>
-                <div className="flex flex-col gap-9">
-                    <SkillList reload={reload} enableUpdate={enableUpdate} />
+                
+                {/* View Lists Button */}
+                <div className="flex flex-col items-center justify-center p-8 border border-gray-700 rounded-2xl">
+                    <div className="text-center">
+                        <h3 className="text-xl font-semibold text-white mb-4">View Collaborators List</h3>
+                        <p className="text-gray-400 mb-6">Manage and view all collaborators in the unified lists page</p>
+                        <button
+                            onClick={() => navigate('/lists')}
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                        >
+                            <span>Go to Lists</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </>
-
     );
 
 };

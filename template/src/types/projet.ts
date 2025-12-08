@@ -1,5 +1,5 @@
 export interface Projet {
-  id: number;
+  id?: number;
   name: string;
   description?: string;
   datebegin?: string;    // format: YYYY-MM-DD

@@ -1,5 +1,4 @@
-import React, { useState, ReactNode, useEffect } from 'react';
-import Header from '../components/Header/index';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar/index';
 import { Outlet, useNavigate } from 'react-router-dom';
 
@@ -19,7 +18,7 @@ const DefaultLayout: React.FC = () => {
   },[]);
 
   return (
-    <div className="dark:bg-boxdark-2 dark:text-bodydark">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
       {/* <!-- ===== Page Wrapper Start ===== --> */}
       <div className="flex h-screen overflow-hidden">
         {/* <!-- ===== Sidebar Start ===== --> */}
@@ -28,12 +27,8 @@ const DefaultLayout: React.FC = () => {
 
         {/* <!-- ===== Content Area Start ===== --> */}
         <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
-          {/* <!-- ===== Header Start ===== --> */}
-          <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-          {/* <!-- ===== Header End ===== --> */}
-
           {/* <!-- ===== Main Content Start ===== --> */}
-          <main>
+          <main className="flex-1">
             <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
               <Outlet />
             </div>

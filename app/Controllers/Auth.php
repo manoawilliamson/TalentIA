@@ -25,42 +25,82 @@ class Auth extends ResourceController
     public function login()
     {
         if ($this->request->getMethod(true) === 'POST') {
-            $rules = [
-                'email' => 'required|valid_email',
-                'password' => 'required|validateUser[email,password]'
-            ];
-            $errors = [
-                'email' => [
-                    'required' => "Champ email ne doit pas etre vide",
-                    'valid_email' => "invalid email"
-                ],
-                'password' => [
-                    'required' => "Champ mot de passe ne doit pas etre vide",
-                    'validateUser' => "Email ou mot de passe incorrect"
-                ]
-            ];
-            if (!$this->validate($rules, $errors)) {
-                return view('login', [
-                    "validation" => $this->validator,
-                ]);
-            } else {
-                try {
-                    $userModel = new UserModel();
-                    $user = $userModel->get_user_by_mail($this->request->getVar('email'));
-                    if ($user) {
-                        $this->setUserSession($user);
-                        return redirect()->to(base_url('/dashboard'));
-                    } else {
-                        throw new \Exception("Auccun utilisateur correspondant");
-                    }
-                } catch (\Exception $e) {
+            // Check if it's an API request (JSON)
+            $isApi = $this->request->getHeaderLine('Content-Type') === 'application/json' ||
+                     strpos($this->request->getHeaderLine('Accept'), 'application/json') !== false;
+
+
+
+            $email = $isApi ? $this->request->getJSON()->email : $this->request->getVar('email');
+            $password = $isApi ? $this->request->getJSON()->password : $this->request->getVar('password');
+
+            if (empty($email) || empty($password)) {
+                if ($isApi) {
+                    return $this->response->setJSON([
+                        'status' => 'error',
+                        'message' => 'Email and password are required'
+                    ])->setStatusCode(400);
+                } else {
                     return view('login', [
-                        "validation" => $this->validator,
+                        "error" => "Email and password are required"
+                    ]);
+                }
+            }
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if ($isApi) {
+                    return $this->response->setJSON([
+                        'status' => 'error',
+                        'message' => 'Invalid email format'
+                    ])->setStatusCode(400);
+                } else {
+                    return view('login', [
+                        "error" => "Invalid email format"
+                    ]);
+                }
+            }
+
+            try {
+                $userModel = new UserModel();
+                $user = $userModel->get_user_by_mail($email);
+                if ($user && $user['password'] === $password) {
+                    $this->setUserSession($user);
+                    if ($isApi) {
+                        return $this->response->setJSON([
+                            'status' => 'success',
+                            'message' => 'Login successful',
+                            'user' => $user
+                        ])->setStatusCode(200);
+                    } else {
+                        return redirect()->to(base_url('/dashboard'));
+                    }
+                } else {
+                    if ($isApi) {
+                        return $this->response->setJSON([
+                            'status' => 'error',
+                            'message' => 'Invalid email or password'
+                        ])->setStatusCode(401);
+                    } else {
+                        return view('login', [
+                            "error" => "Invalid email or password"
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                if ($isApi) {
+                    return $this->response->setJSON([
+                        'status' => 'error',
+                        'message' => 'Server error: ' . $e->getMessage()
+                    ])->setStatusCode(500);
+                } else {
+                    return view('login', [
                         "error" => $e->getMessage()
                     ]);
                 }
             }
-            return view('login');
+            if (!$isApi) {
+                return view('login');
+            }
         }
     }
 

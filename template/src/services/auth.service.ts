@@ -5,15 +5,24 @@ const LogIn = async ( data: any ) => {
 
     const url = `${BASE_URL}/login`;
 
-    const response = await axios.post(url, JSON.stringify(data), {
-        headers: {
-            "Content-Type" : "application/json"
+    try {
+        const response = await axios.post(url, JSON.stringify(data), {
+            headers: {
+                "Content-Type" : "application/json"
+            }
+        });
+        return response;
+    } catch (error: any) {
+        if (error.response) {
+            return error.response;
+        } else {
+            // Network error, CORS, etc.
+            return {
+                status: 0,
+                data: { message: 'Network error or CORS issue' }
+            };
         }
-    }).catch((error) => {
-        return error.response;
-    }  );
-
-    return response;
+    }
 
 };
 

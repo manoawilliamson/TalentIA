@@ -1,124 +1,827 @@
-import React, { useEffect, useState } from 'react';
-import CardDataStats from '../../components/CardDataStats';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { FaProjectDiagram, FaCode, FaUsers, FaChartLine, FaArrowUp, FaUserPlus, FaPlusCircle, FaPlus, FaClock, FaTrash, FaSync, FaBell, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
 import ChartOne from '../../components/Charts/ChartOne';
-import ChartThree from '../../components/Charts/ChartThree';
 import ChartTwo from '../../components/Charts/ChartTwo';
-import ChatCard from '../../components/Chat/ChatCard';
-import MapOne from '../../components/Maps/MapOne';
 import TableOne from '../../components/Tables/TableOne';
 
 const ECommerce: React.FC = () => {
   const [collabCount, setCollabCount] = useState<number>(0);
   const [skillCount, setSkillCount] = useState<number>(0);
   const [projectCount, setProjectCount] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  
+  // Real-time tracking states
+  const [realTimeData, setRealTimeData] = useState<any>({
+    projects: [],
+    skills: [],
+    users: [],
+    projectStats: { created: 0, updated: 0, deleted: 0 },
+    skillStats: { created: 0, updated: 0, deleted: 0 },
+    userStats: { created: 0, active: 0, inactive: 0 },
+    systemHealth: { status: 'healthy', lastCheck: new Date() }
+  });
+  
+  const [previousData, setPreviousData] = useState<any>({});
+  const [changeIndicators, setChangeIndicators] = useState<any>({});
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isRealTimeEnabled, setIsRealTimeEnabled] = useState<boolean>(true);
+  const wsRef = useRef<WebSocket | null>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Comprehensive real-time data fetching with change detection
+  const fetchAllData = useCallback(async () => {
+    try {
+      console.log('🔄 Fetching dashboard data...');
+      
+      const [
+        projectsRes,
+        skillsRes, 
+        personsRes
+      ] = await Promise.all([
+        fetch('http://localhost:8080/api/projects'),
+        fetch('http://localhost:8080/api/skills'),
+        fetch('http://localhost:8080/api/person')
+      ]);
+
+      console.log('📡 API Response status:', {
+        projects: projectsRes.status,
+        skills: skillsRes.status,
+        persons: personsRes.status
+      });
+
+      const [
+        projectsData,
+        skillsData,
+        personsData
+      ] = await Promise.all([
+        projectsRes.json(),
+        skillsRes.json(),
+        personsRes.json()
+      ]);
+
+      console.log('📊 Raw API responses:', {
+        projects: projectsData,
+        skills: skillsData,
+        persons: personsData
+      });
+
+      // Detailed logging for projects and skills structure
+      console.log('🔍 Projects structure analysis:', {
+        isProjectsArray: Array.isArray(projectsData),
+        projectsKeys: Object.keys(projectsData || {}),
+        projectsDataProperty: projectsData.data,
+        projectsDataLength: (projectsData.data || []).length,
+        fullProjectsObject: JSON.stringify(projectsData, null, 2)
+      });
+
+      console.log('🔍 Skills structure analysis:', {
+        isSkillsArray: Array.isArray(skillsData),
+        skillsKeys: Object.keys(skillsData || {}),
+        skillsDataProperty: skillsData.data,
+        skillsDataLength: (skillsData.data || []).length,
+        fullSkillsObject: JSON.stringify(skillsData, null, 2)
+      });
+
+      // Extract data arrays correctly based on actual API response structure
+      const projectsArray = Array.isArray(projectsData) ? projectsData : (projectsData.projects || projectsData.data || []);
+      const skillsArray = Array.isArray(skillsData) ? skillsData : (skillsData.skills || skillsData.data || []);
+      const personsArray = Array.isArray(personsData) ? personsData : (personsData.data || []);
+
+      // Calculate actual counts from the data arrays
+      const actualProjectCount = projectsArray.length;
+      const actualSkillCount = skillsArray.length;
+      const actualCollabCount = personsArray.length;
+
+      console.log('🔢 Calculated counts:', {
+        projects: actualProjectCount,
+        skills: actualSkillCount,
+        collaborators: actualCollabCount,
+        projectsArray: projectsArray,
+        skillsArray: skillsArray,
+        personsArray: personsArray
+      });
+
+      const newData = {
+        projects: projectsArray,
+        skills: skillsArray,
+        users: personsArray,
+        collabCount: actualCollabCount,
+        skillCount: actualSkillCount,
+        projectCount: actualProjectCount,
+        timestamp: new Date()
+      };
+
+      console.log('✅ Final data object:', newData);
+
+      // Detect changes
+      const changes = detectChanges(previousData, newData);
+      
+      // Update change indicators
+      if (Object.keys(changes).length > 0) {
+        setChangeIndicators(changes);
+        generateNotifications(changes);
+        
+        // Auto-clear indicators after 3 seconds
+        setTimeout(() => setChangeIndicators({}), 3000);
+      }
+
+      // Update all state
+      setCollabCount(newData.collabCount);
+      setSkillCount(newData.skillCount);
+      setProjectCount(newData.projectCount);
+      setRealTimeData((prev: any) => ({
+        ...prev,
+        projects: newData.projects,
+        skills: newData.skills,
+        users: newData.users,
+        projectStats: calculateStats(prev.projectStats, newData.projects),
+        skillStats: calculateStats(prev.skillStats, newData.skills),
+        userStats: calculateStats(prev.userStats, newData.users),
+        systemHealth: { status: 'healthy', lastCheck: new Date() }
+      }));
+      
+      setPreviousData(newData);
+      setLastUpdate(new Date());
+      
+      // Generate activities
+      await generateActivities(newData);
+      
+    } catch (error) {
+      console.error('Error fetching real-time data:', error);
+      setRealTimeData((prev: any) => ({
+        ...prev,
+        systemHealth: { status: 'error', lastCheck: new Date(), error: (error as Error).message }
+      }));
+      
+      // Still try to get basic data even if some APIs fail
+      try {
+        const [projectsRes, skillsRes, personsRes] = await Promise.all([
+          fetch('http://localhost:8080/api/projects').catch(() => ({ json: () => ({ data: [] }) })),
+          fetch('http://localhost:8080/api/skills').catch(() => ({ json: () => ({ data: [] }) })),
+          fetch('http://localhost:8080/api/person').catch(() => ({ json: () => ({ data: [] }) }))
+        ]);
+
+        const [projectsData, skillsData, personsData] = await Promise.all([
+          projectsRes.json(),
+          skillsRes.json(),
+          personsRes.json()
+        ]);
+
+        // Calculate counts from actual data
+        const actualProjectCount = (projectsData.data || []).length;
+        const actualSkillCount = (skillsData.data || []).length;
+        const actualCollabCount = (personsData.data || []).length;
+
+        setCollabCount(actualCollabCount);
+        setSkillCount(actualSkillCount);
+        setProjectCount(actualProjectCount);
+
+        console.log('Fallback counts from data:', {
+          projects: actualProjectCount,
+          skills: actualSkillCount,
+          collaborators: actualCollabCount
+        });
+      } catch (countError) {
+        console.error('Error fetching fallback data:', countError);
+        // Set default values
+        setCollabCount(0);
+        setSkillCount(0);
+        setProjectCount(0);
+      }
+      
+      // Generate default activities
+      setRecentActivities([
+        {
+          id: 'system-1',
+          title: 'Dashboard initialized',
+          description: 'System started - some data may be unavailable',
+          timestamp: new Date().toISOString(),
+          icon: FaClock,
+          color: 'gray',
+          action: 'system'
+        }
+      ]);
+    } finally {
+      // Ensure loading is set to false
+      setLoading(false);
+    }
+  }, [previousData]);
+
+  // Change detection algorithm
+  const detectChanges = (prev: any, curr: any) => {
+    const changes: any = {};
+    
+    if (!prev || !curr) return changes;
+    
+    // Count changes
+    const prevProjects = prev.projects?.length || 0;
+    const currProjects = curr.projects?.length || 0;
+    if (prevProjects !== currProjects) {
+      changes.projects = currProjects > prevProjects ? 'added' : 'removed';
+      changes.projectCount = currProjects - prevProjects;
+    }
+    
+    const prevSkills = prev.skills?.length || 0;
+    const currSkills = curr.skills?.length || 0;
+    if (prevSkills !== currSkills) {
+      changes.skills = currSkills > prevSkills ? 'added' : 'removed';
+      changes.skillCount = currSkills - prevSkills;
+    }
+    
+    const prevUsers = prev.users?.length || 0;
+    const currUsers = curr.users?.length || 0;
+    if (prevUsers !== currUsers) {
+      changes.users = currUsers > prevUsers ? 'added' : 'removed';
+      changes.userCount = currUsers - prevUsers;
+    }
+    
+    return changes;
+  };
+
+  // Calculate statistics
+  const calculateStats = (prevStats: any, data: any[]) => {
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    
+    const recentItems = data.filter((item: any) => {
+      const itemDate = new Date(item.created_at || item.updated_at || item.datebegin || now);
+      return itemDate > oneDayAgo;
+    });
+    
+    return {
+      created: recentItems.length,
+      updated: data.filter((item: any) => {
+        const updatedDate = new Date(item.updated_at || now);
+        return updatedDate > oneDayAgo;
+      }).length,
+      deleted: prevStats?.deleted || 0, // Would need deletion tracking
+      total: data.length
+    };
+  };
+
+  // Generate notifications for changes
+  const generateNotifications = (changes: any) => {
+    const newNotifications: any[] = [];
+    
+    if (changes.projects) {
+      newNotifications.push({
+        id: `proj-${Date.now()}`,
+        type: 'project',
+        message: `${Math.abs(changes.projectCount)} project(s) ${changes.projects}`,
+        icon: changes.projects === 'added' ? FaPlusCircle : FaTrash,
+        color: changes.projects === 'added' ? 'green' : 'red',
+        timestamp: new Date()
+      });
+    }
+    
+    if (changes.skills) {
+      newNotifications.push({
+        id: `skill-${Date.now()}`,
+        type: 'skill',
+        message: `${Math.abs(changes.skillCount)} skill(s) ${changes.skills}`,
+        icon: changes.skills === 'added' ? FaPlusCircle : FaTrash,
+        color: changes.skills === 'added' ? 'purple' : 'red',
+        timestamp: new Date()
+      });
+    }
+    
+    if (changes.users) {
+      newNotifications.push({
+        id: `user-${Date.now()}`,
+        type: 'user',
+        message: `${Math.abs(changes.userCount)} user(s) ${changes.users}`,
+        icon: changes.users === 'added' ? FaUserPlus : FaTrash,
+        color: changes.users === 'added' ? 'blue' : 'red',
+        timestamp: new Date()
+      });
+    }
+    
+    if (newNotifications.length > 0) {
+      setNotifications(prev => [...newNotifications, ...prev].slice(0, 10)); // Keep latest 10
+    }
+  };
+
+  // Enhanced activity generation
+  const generateActivities = async (data: any) => {
+    const activities: any[] = [];
+    
+    // Recent project activities
+    if (data.projects && Array.isArray(data.projects)) {
+      data.projects.slice(0, 5).forEach((project: any) => {
+        activities.push({
+          id: `project-${project.id}`,
+          type: 'project',
+          title: `Project "${project.name}"`,
+          description: `Status: ${project.etat || 'Active'} | ${project.nbrperson || 0} team members`,
+          timestamp: project.created_at || new Date().toISOString(),
+          icon: FaProjectDiagram,
+          color: 'blue',
+          action: 'created',
+          metadata: {
+            id: project.id,
+            status: project.etat,
+            teamSize: project.nbrperson
+          }
+        });
+      });
+    }
+    
+    // Recent skill activities
+    if (data.skills && Array.isArray(data.skills)) {
+      data.skills.slice(0, 3).forEach((skill: any) => {
+        activities.push({
+          id: `skill-${skill.id}`,
+          type: 'skill',
+          title: `Skill "${skill.name}"`,
+          description: skill.description || 'Technical skill available',
+          timestamp: skill.updated_at || skill.created_at || new Date().toISOString(),
+          icon: FaCode,
+          color: 'purple',
+          action: 'updated',
+          metadata: {
+            id: skill.id,
+            level: skill.level || 'intermediate'
+          }
+        });
+      });
+    }
+    
+    // Recent user activities
+    if (data.users && Array.isArray(data.users)) {
+      data.users.slice(0, 3).forEach((user: any) => {
+        activities.push({
+          id: `user-${user.id}`,
+          type: 'user',
+          title: `User "${user.name} ${user.firstname}"`,
+          description: `${user.email} | ${user.telephone || 'No phone'}`,
+          timestamp: user.created_at || new Date().toISOString(),
+          icon: FaUserPlus,
+          color: 'green',
+          action: 'registered',
+          metadata: {
+            id: user.id,
+            email: user.email,
+            phone: user.telephone
+          }
+        });
+      });
+    }
+    
+    // Sort by timestamp and take latest
+    activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    setRecentActivities(activities.slice(0, 8));
+  };
+
+  // Function to fetch recent activities (legacy - now integrated)
+  // Note: This function is kept for compatibility but no longer used
+  // const fetchRecentActivities = async () => {
+  //   await fetchAllData();
+  // };
 
   useEffect(() => {
-    fetch('http://localhost:8080/api/person/nbrperson')
-      .then(res => res.json())
-      .then(data => setCollabCount(data.count || 0))
-      .catch(() => setCollabCount(0));
-  }, []);
+    // Initialize real-time data
+    fetchAllData();
+    
+    // Set up real-time updates
+    if (isRealTimeEnabled) {
+      // Fast polling for real-time updates (every 5 seconds)
+      pollingIntervalRef.current = setInterval(fetchAllData, 5000);
+      
+      // Optional: WebSocket connection for true real-time
+      // This would require WebSocket server implementation
+      try {
+        const ws = new WebSocket('ws://localhost:8080/ws');
+        wsRef.current = ws;
+        
+        ws.onopen = () => {
+          console.log('WebSocket connected for real-time updates');
+        };
+        
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.type === 'data_change') {
+            fetchAllData(); // Refresh data on change notification
+          }
+        };
+        
+        ws.onerror = (error) => {
+          console.log('WebSocket error, falling back to polling:', error);
+        };
+        
+        ws.onclose = () => {
+          console.log('WebSocket disconnected, using polling');
+        };
+      } catch (error) {
+        console.log('WebSocket not available, using polling only');
+      }
+    }
+    
+    // Cleanup
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, [isRealTimeEnabled, fetchAllData]);
 
+  // Update loading state - show dashboard after initial load attempt
   useEffect(() => {
-    fetch('http://localhost:8080/api/skills/nbrskill')
-      .then(res => res.json())
-      .then(data => setSkillCount(data.count || 0))
-      .catch(() => setSkillCount(0));
-  }, []);
-  useEffect(() => {
-    fetch('http://localhost:8080/api/projects/nbrproject')
-      .then(res => res.json())
-      .then(data => setProjectCount(data.count || 0))
-      .catch(() => setProjectCount(0));
-  }, []);
+    // Set a timeout to ensure dashboard shows even if APIs fail
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 3000); // 3 seconds max wait time
+
+    // Also set loading to false if we have any data
+    if (realTimeData.projects.length > 0 || realTimeData.skills.length > 0 || realTimeData.users.length > 0) {
+      setLoading(false);
+      clearTimeout(timeout);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [realTimeData]);
+
+  // Helper function to format time ago
+  const formatTimeAgo = (timestamp: string) => {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffInSeconds = Math.floor((now.getTime() - time.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    
+    return time.toLocaleDateString();
+  };
+
+  // Get icon color based on activity type
+  const getActivityColor = (color: string) => {
+    const colorMap: { [key: string]: string } = {
+      blue: 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30',
+      purple: 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30',
+      green: 'bg-green-500/20 text-green-400 hover:bg-green-500/30',
+      red: 'bg-red-500/20 text-red-400 hover:bg-red-500/30',
+      gray: 'bg-gray-500/20 text-gray-400 hover:bg-gray-500/30'
+    };
+    return colorMap[color] || colorMap.gray;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="absolute inset-0 w-16 h-16 border-4 border-purple-500 border-b-transparent rounded-full animate-spin animation-delay-150"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
-        {/* <CardDataStats title="Total views" total="$3.456K" rate="0.43%" levelUp>
-          <svg
-            className="fill-primary dark:fill-white"
-            width="22"
-            height="16"
-            viewBox="0 0 22 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M11 15.1156C4.19376 15.1156 0.825012 8.61876 0.687512 8.34376C0.584387 8.13751 0.584387 7.86251 0.687512 7.65626C0.825012 7.38126 4.19376 0.918762 11 0.918762C17.8063 0.918762 21.175 7.38126 21.3125 7.65626C21.4156 7.86251 21.4156 8.13751 21.3125 8.34376C21.175 8.61876 17.8063 15.1156 11 15.1156ZM2.26876 8.00001C3.02501 9.27189 5.98126 13.5688 11 13.5688C16.0188 13.5688 18.975 9.27189 19.7313 8.00001C18.975 6.72814 16.0188 2.43126 11 2.43126C5.98126 2.43126 3.02501 6.72814 2.26876 8.00001Z"
-              fill=""
-            />
-            <path
-              d="M11 10.9219C9.38438 10.9219 8.07812 9.61562 8.07812 8C8.07812 6.38438 9.38438 5.07812 11 5.07812C12.6156 5.07812 13.9219 6.38438 13.9219 8C13.9219 9.61562 12.6156 10.9219 11 10.9219ZM11 6.625C10.2437 6.625 9.625 7.24375 9.625 8C9.625 8.75625 10.2437 9.375 11 9.375C11.7563 9.375 12.375 8.75625 12.375 8C12.375 7.24375 11.7563 6.625 11 6.625Z"
-              fill=""
-            />
-          </svg>
-        </CardDataStats> */}
-        <CardDataStats title="Total Projet" total={projectCount.toString()}>
-          <svg
-            className="fill-primary dark:fill-white"
-            width="20"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M10 2H14C15.1 2 16 2.9 16 4V6H20C21.1 6 22 6.9 22 8V20C22 21.1 21.1 22 20 22H4C2.9 22 2 21.1 2 20V8C2 6.9 2.9 6 4 6H8V4C8 2.9 8.9 2 10 2ZM10 6H14V4H10V6ZM4 8V20H20V8H4Z"
-              fill=""
-            />
-          </svg>
-        </CardDataStats>
+      <div className="min-h-screen p-6">
+        {/* Header with Real-time Status */}
+        <div className="mb-8 animate-fade-in">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Real-Time Dashboard
+              </h1>
+              <p className="text-gray-400 text-lg">
+                Live monitoring of TalentIA system
+              </p>
+            </div>
+            
+            {/* Real-time Controls */}
+            <div className="flex items-center gap-4">
+              {/* System Health */}
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${
+                realTimeData.systemHealth.status === 'healthy' 
+                  ? 'bg-green-500/20 border-green-500/30 text-green-400'
+                  : 'bg-red-500/20 border-red-500/30 text-red-400'
+              }`}>
+                {realTimeData.systemHealth.status === 'healthy' ? (
+                  <FaCheckCircle className="text-sm" />
+                ) : (
+                  <FaExclamationTriangle className="text-sm" />
+                )}
+                <span className="text-sm font-medium">
+                  {realTimeData.systemHealth.status === 'healthy' ? 'System Healthy' : 'System Error'}
+                </span>
+              </div>
+              
+              {/* Real-time Toggle */}
+              <button
+                onClick={() => setIsRealTimeEnabled(!isRealTimeEnabled)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 ${
+                  isRealTimeEnabled 
+                    ? 'bg-blue-500/20 border-blue-500/30 text-blue-400 hover:bg-blue-500/30'
+                    : 'bg-gray-500/20 border-gray-500/30 text-gray-400 hover:bg-gray-500/30'
+                }`}
+              >
+                <FaSync className={`text-sm ${isRealTimeEnabled ? 'animate-spin' : ''}`} />
+                <span className="text-sm font-medium">
+                  {isRealTimeEnabled ? 'Real-time ON' : 'Real-time OFF'}
+                </span>
+              </button>
+              
+              {/* Notifications */}
+              <div className="relative">
+                <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-600 bg-gray-700/50 text-gray-300 hover:bg-gray-700/70 transition-all duration-300">
+                  <FaBell className="text-sm" />
+                  <span className="text-sm font-medium">Alerts</span>
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">
+                      {notifications.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Last Update & Change Indicators */}
+          <div className="flex items-center gap-6 text-sm text-gray-400">
+            <div className="flex items-center gap-2">
+              <FaClock className="text-xs" />
+              <span>Last updated: {formatTimeAgo(lastUpdate.toISOString())}</span>
+            </div>
+            
+            {Object.keys(changeIndicators).length > 0 && (
+              <div className="flex items-center gap-4 animate-pulse">
+                {changeIndicators.projects && (
+                  <span className="flex items-center gap-1 text-blue-400">
+                    <FaProjectDiagram className="text-xs" />
+                    {changeIndicators.projectCount > 0 ? '+' : ''}{changeIndicators.projectCount} projects
+                  </span>
+                )}
+                {changeIndicators.skills && (
+                  <span className="flex items-center gap-1 text-purple-400">
+                    <FaCode className="text-xs" />
+                    {changeIndicators.skillCount > 0 ? '+' : ''}{changeIndicators.skillCount} skills
+                  </span>
+                )}
+                {changeIndicators.users && (
+                  <span className="flex items-center gap-1 text-green-400">
+                    <FaUsers className="text-xs" />
+                    {changeIndicators.userCount > 0 ? '+' : ''}{changeIndicators.userCount} users
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
 
+        {/* Notifications Panel */}
+        {notifications.length > 0 && (
+          <div className="mb-6 animate-slide-down">
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-white font-medium flex items-center gap-2">
+                  <FaBell className="text-sm" />
+                  Recent Changes
+                </h3>
+                <button
+                  onClick={() => setNotifications([])}
+                  className="text-gray-400 hover:text-white text-sm transition-colors"
+                >
+                  Clear All
+                </button>
+              </div>
+              <div className="space-y-2">
+                {notifications.slice(0, 3).map((notification) => {
+                  const IconComponent = notification.icon;
+                  return (
+                    <div key={notification.id} className="flex items-center gap-3 p-2 bg-gray-700/50 rounded-lg">
+                      <div className={`w-8 h-8 bg-${notification.color}-500/20 rounded-lg flex items-center justify-center`}>
+                        <IconComponent className={`text-${notification.color}-400 text-sm`} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-white text-sm">{notification.message}</p>
+                        <p className="text-gray-400 text-xs">{formatTimeAgo(notification.timestamp.toISOString())}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
-        <CardDataStats title="Total Skills" total={skillCount.toString()}>
-          <svg
-            className="fill-primary dark:fill-white"
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M8.7 16.3L3.4 11L8.7 5.7L7.3 4.3L0.6 11L7.3 17.7L8.7 16.3ZM15.3 16.3L20.6 11L15.3 5.7L16.7 4.3L23.4 11L16.7 17.7L15.3 16.3ZM13.6 2L10.4 22H12.4L15.6 2H13.6Z"
-              fill=""
-            />
-          </svg>
-        </CardDataStats>
+        {/* Enhanced Stats Cards */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          {/* Projects Card */}
+          <div className={`bg-gradient-to-br from-gray-800 to-gray-900 border rounded-2xl p-6 transform transition-all duration-300 hover:scale-[1.02] hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/20 animate-slide-up ${
+            changeIndicators.projects ? 'border-blue-500 animate-pulse' : 'border-gray-700'
+          }`} style={{ animationDelay: '0.1s' }}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                <FaProjectDiagram className="text-white text-xl" />
+              </div>
+              <div className="text-blue-400 text-sm font-medium flex items-center">
+                {changeIndicators.projects ? (
+                  <>
+                    <FaArrowUp className="mr-1 animate-bounce" />
+                    {changeIndicators.projectCount > 0 ? '+' : ''}{changeIndicators.projectCount}
+                  </>
+                ) : (
+                  <>
+                    <FaArrowUp className="mr-1" />
+                    {realTimeData.projectStats.total > 0 ? Math.round((realTimeData.projectStats.created / realTimeData.projectStats.total) * 100) : 0}%
+                  </>
+                )}
+              </div>
+            </div>
+            <h3 className="text-3xl font-bold text-white mb-1">{projectCount}</h3>
+            <p className="text-gray-400 text-sm">Total Projects</p>
+            <div className="mt-3 pt-3 border-t border-gray-700">
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-400">Created today</span>
+                <span className="text-blue-400">{realTimeData.projectStats.created}</span>
+              </div>
+            </div>
+          </div>
 
-        <CardDataStats title="Total Collaborateurs" total={collabCount.toString()} >
-          <svg
-            className="fill-primary dark:fill-white"
-            width="22"
-            height="18"
-            viewBox="0 0 22 18"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M7.18418 8.03751C9.31543 8.03751 11.0686 6.35313 11.0686 4.25626C11.0686 2.15938 9.31543 0.475006 7.18418 0.475006C5.05293 0.475006 3.2998 2.15938 3.2998 4.25626C3.2998 6.35313 5.05293 8.03751 7.18418 8.03751ZM7.18418 2.05626C8.45605 2.05626 9.52168 3.05313 9.52168 4.29063C9.52168 5.52813 8.49043 6.52501 7.18418 6.52501C5.87793 6.52501 4.84668 5.52813 4.84668 4.29063C4.84668 3.05313 5.9123 2.05626 7.18418 2.05626Z"
-              fill=""
-            />
-            <path
-              d="M15.8124 9.6875C17.6687 9.6875 19.1468 8.24375 19.1468 6.42188C19.1468 4.6 17.6343 3.15625 15.8124 3.15625C13.9905 3.15625 12.478 4.6 12.478 6.42188C12.478 8.24375 13.9905 9.6875 15.8124 9.6875ZM15.8124 4.7375C16.8093 4.7375 17.5999 5.49375 17.5999 6.45625C17.5999 7.41875 16.8093 8.175 15.8124 8.175C14.8155 8.175 14.0249 7.41875 14.0249 6.45625C14.0249 5.49375 14.8155 4.7375 15.8124 4.7375Z"
-              fill=""
-            />
-            <path
-              d="M15.9843 10.0313H15.6749C14.6437 10.0313 13.6468 10.3406 12.7874 10.8563C11.8593 9.61876 10.3812 8.79376 8.73115 8.79376H5.67178C2.85303 8.82814 0.618652 11.0625 0.618652 13.8469V16.3219C0.618652 16.975 1.13428 17.4906 1.7874 17.4906H20.2468C20.8999 17.4906 21.4499 16.9406 21.4499 16.2875V15.4625C21.4155 12.4719 18.9749 10.0313 15.9843 10.0313ZM2.16553 15.9438V13.8469C2.16553 11.9219 3.74678 10.3406 5.67178 10.3406H8.73115C10.6562 10.3406 12.2374 11.9219 12.2374 13.8469V15.9438H2.16553V15.9438ZM19.8687 15.9438H13.7499V13.8469C13.7499 13.2969 13.6468 12.7469 13.4749 12.2313C14.0937 11.7844 14.8499 11.5781 15.6405 11.5781H15.9499C18.0812 11.5781 19.8343 13.3313 19.8343 15.4625V15.9438H19.8687Z"
-              fill=""
-            />
-          </svg>
-        </CardDataStats>
-      </div>
+          {/* Skills Card */}
+          <div className={`bg-gradient-to-br from-gray-800 to-gray-900 border rounded-2xl p-6 transform transition-all duration-300 hover:scale-[1.02] hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/20 animate-slide-up ${
+            changeIndicators.skills ? 'border-purple-500 animate-pulse' : 'border-gray-700'
+          }`} style={{ animationDelay: '0.2s' }}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <FaCode className="text-white text-xl" />
+              </div>
+              <div className="text-purple-400 text-sm font-medium flex items-center">
+                {changeIndicators.skills ? (
+                  <>
+                    <FaArrowUp className="mr-1 animate-bounce" />
+                    {changeIndicators.skillCount > 0 ? '+' : ''}{changeIndicators.skillCount}
+                  </>
+                ) : (
+                  <>
+                    <FaArrowUp className="mr-1" />
+                    {realTimeData.skillStats.total > 0 ? Math.round((realTimeData.skillStats.created / realTimeData.skillStats.total) * 100) : 0}%
+                  </>
+                )}
+              </div>
+            </div>
+            <h3 className="text-3xl font-bold text-white mb-1">{skillCount}</h3>
+            <p className="text-gray-400 text-sm">Total Skills</p>
+            <div className="mt-3 pt-3 border-t border-gray-700">
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-400">Updated today</span>
+                <span className="text-purple-400">{realTimeData.skillStats.updated}</span>
+              </div>
+            </div>
+          </div>
 
-      <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
-        <ChartOne />
-        <ChartTwo />
-        <ChartThree />
-        <div className="col-span-12 xl:col-span-8">
+          {/* Users Card */}
+          <div className={`bg-gradient-to-br from-gray-800 to-gray-900 border rounded-2xl p-6 transform transition-all duration-300 hover:scale-[1.02] hover:border-green-500 hover:shadow-xl hover:shadow-green-500/20 animate-slide-up ${
+            changeIndicators.users ? 'border-green-500 animate-pulse' : 'border-gray-700'
+          }`} style={{ animationDelay: '0.3s' }}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                <FaUsers className="text-white text-xl" />
+              </div>
+              <div className="text-green-400 text-sm font-medium flex items-center">
+                {changeIndicators.users ? (
+                  <>
+                    <FaArrowUp className="mr-1 animate-bounce" />
+                    {changeIndicators.userCount > 0 ? '+' : ''}{changeIndicators.userCount}
+                  </>
+                ) : (
+                  <>
+                    <FaArrowUp className="mr-1" />
+                    {realTimeData.userStats.total > 0 ? Math.round((realTimeData.userStats.created / realTimeData.userStats.total) * 100) : 0}%
+                  </>
+                )}
+              </div>
+            </div>
+            <h3 className="text-3xl font-bold text-white mb-1">{collabCount}</h3>
+            <p className="text-gray-400 text-sm">Total Collaborators</p>
+            <div className="mt-3 pt-3 border-t border-gray-700">
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-400">Joined today</span>
+                <span className="text-green-400">{realTimeData.userStats.created}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* System Efficiency Card */}
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 transform transition-all duration-300 hover:scale-[1.02] hover:border-orange-500 hover:shadow-xl hover:shadow-orange-500/20 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                <FaChartLine className="text-white text-xl" />
+              </div>
+              <div className="text-orange-400 text-sm font-medium">
+                <FaArrowUp className="mr-1" />
+                {isRealTimeEnabled ? 'Live' : 'Offline'}
+              </div>
+            </div>
+            <h3 className="text-3xl font-bold text-white mb-1">
+              {isRealTimeEnabled ? '100%' : '95%'}
+            </h3>
+            <p className="text-gray-400 text-sm">System Efficiency</p>
+            <div className="mt-3 pt-3 border-t border-gray-700">
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-400">Response time</span>
+                <span className="text-orange-400">{isRealTimeEnabled ? '< 1s' : '~5s'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 mb-8 animate-slide-up" style={{ animationDelay: '0.5s' }}>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-white">Recent Activity</h2>
+            <div className="flex items-center gap-2 text-gray-400 text-sm">
+              <FaClock className="text-xs" />
+              <span>Updated {formatTimeAgo(lastUpdate.toISOString())}</span>
+            </div>
+          </div>
+          
+          {recentActivities.length > 0 ? (
+            <div className="space-y-3">
+              {recentActivities.map((activity) => {
+                const IconComponent = activity.icon;
+                return (
+                  <div 
+                    key={activity.id} 
+                    className="flex items-center gap-4 p-4 bg-gray-700/50 rounded-xl border border-gray-600 hover:bg-gray-700/70 transition-all duration-300 cursor-pointer group"
+                  >
+                    <div className={`w-10 h-10 ${getActivityColor(activity.color).split(' ')[0]} rounded-lg flex items-center justify-center ${getActivityColor(activity.color).split(' ').slice(1).join(' ')} transition-colors`}>
+                      <IconComponent className="text-sm" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-medium truncate">{activity.title}</p>
+                      <p className="text-gray-400 text-sm truncate">{activity.description}</p>
+                    </div>
+                    <div className="flex-shrink-0 text-right">
+                      <p className="text-gray-400 text-xs">{formatTimeAgo(activity.timestamp)}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaClock className="text-gray-400 text-2xl" />
+              </div>
+              <p className="text-gray-400">No recent activity</p>
+            </div>
+          )}
+        </div>
+
+        {/* Charts and Tables */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2 bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 animate-slide-up" style={{ animationDelay: '0.6s' }}>
+            <h2 className="text-2xl font-bold text-white mb-6">Performance Overview</h2>
+            <ChartOne />
+          </div>
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 animate-slide-up" style={{ animationDelay: '0.7s' }}>
+            <h2 className="text-2xl font-bold text-white mb-6">Skills Distribution</h2>
+            <ChartTwo />
+          </div>
+        </div>
+
+        {/* Data Table */}
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 animate-slide-up" style={{ animationDelay: '0.8s' }}>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-white">Recent Projects</h2>
+            <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105">
+              <FaPlus className="mr-2" />
+              New Project
+            </button>
+          </div>
           <TableOne />
         </div>
       </div>
+
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slide-up {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.8s ease-out;
+        }
+        
+        .animate-slide-up {
+          animation: slide-up 0.8s ease-out both;
+        }
+      `}</style>
     </>
   );
 };

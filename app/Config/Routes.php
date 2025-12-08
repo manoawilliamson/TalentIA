@@ -90,9 +90,6 @@ $routes->group('api', function ($routes) {
         $response = service('response');
         $response->setStatusCode(204);
         $response->setHeader('Allow', 'OPTIONS, GET, POST, PUT, PATCH, DELETE');
-        $response->setHeader('Access-Control-Allow-Origin', '*');
-        $response->setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, PATCH, DELETE');
-        $response->setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return $response;
     });
     $routes->post('login', 'Auth::login');
@@ -123,7 +120,7 @@ $routes->group('api', function ($routes) {
         $routes->get('/', 'ProjectController::index');
         $routes->get('detail/(:num)', 'ProjectController::detail/$1');
         $routes->post('/', 'ProjectController::store');
-        $routes->put('(:num)', 'Api\ProjectController::update/$1');
+        $routes->put('(:num)', 'ProjectController::update/$1');
         $routes->delete('(:num)', 'ProjectController::delete/$1');
         $routes->get('download/(:segment)', 'ProjectController::download/$1');
         $routes->get('nbrproject', 'ProjectController::count'); 
@@ -134,6 +131,7 @@ $routes->group('api', function ($routes) {
 
     $routes->group('projectskills', function ($routes) {
         $routes->get('/', 'ProjectSkillsController::index');                // Liste tous les projectskills
+        $routes->get('list/(:num)', 'ProjectSkillsController::list/$1');   // Liste les skills d'un projet
         $routes->get('(:num)', 'ProjectSkillsController::show/$1');        // Détail d'un projectskill
         $routes->post('/', 'ProjectSkillsController::store');             // Création d'un projectskill
         $routes->put('(:num)/(:num)', 'ProjectSkillsController::update/$1/$2');;    // Modification d'un projectskill
@@ -173,6 +171,12 @@ $routes->group('api', function ($routes) {
         $routes->post('/', 'Api\UserSkillController::create');          // Création d'un user_skill
         $routes->put('(:num)', 'Api\UserSkillController::update/$1');   // Modification d'un user_skill
         $routes->delete('(:num)', 'Api\UserSkillController::delete/$1'); // Suppression d'un user_skill
+    });
+
+    $routes->group('recommendations', function ($routes) {
+        $routes->get('project/(:num)', 'RecommendationController::getForProject/$1');
+        $routes->get('person/(:num)', 'RecommendationController::getForPerson/$1');
+        $routes->get('project-alerts/(:num)', 'RecommendationController::getProjectAlerts/$1');
     });
 });
 
