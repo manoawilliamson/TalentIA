@@ -1,72 +1,59 @@
-# 🌟 TalentIA - Talent Management System
+# TalentIA - Talent Management System
 
-**TalentIA** est une application web de gestion des talents et des compétences, développée avec **CodeIgniter 4** pour le backend et **React.js** avec **Tailwind CSS** pour le frontend.  
-Elle permet aux entreprises et organisations de gérer efficacement les profils, les compétences et les parcours professionnels.
+A comprehensive talent management system built with CodeIgniter 4 and React.js for managing projects, skills, and personnel allocation in organizations.
 
----
+## Overview
 
-## 🚀 Fonctionnalités principales
-- 👤 **Gestion des profils utilisateurs** (création, modification, suppression)
-- 📊 **Suivi des compétences et expériences**
-- 🔐 **Authentification et autorisation sécurisées** (JWT)
-- 🌐 **API RESTful** pour communication frontend-backend
-- 💻 **Interface moderne et responsive** avec React + Tailwind CSS
-- 🎯 **Système de recommandation** - Matching intelligent projet-personne basé sur les compétences
-- 📈 **Analytics \u0026 Reporting** - Statistiques de projets, compétences et utilisation
+TalentIA is a web application designed to streamline talent management by connecting project requirements with employee skills. The system helps organizations efficiently allocate personnel to projects based on skill requirements and availability through an intelligent recommendation engine.
 
----
+## Technology Stack
 
-## ⚙️ Prérequis
-Assurez-vous d'avoir installé :
-- **PHP** >= 8.1
-- **Composer**
-- **PostgreSQL**
-- **Node.js** >= 18
-- **npm**
+### Backend
+- CodeIgniter 4 (PHP)
+- PostgreSQL
+- JWT Authentication
 
----
+### Frontend
+- React.js with TypeScript
+- Tailwind CSS
+- Axios for API communication
 
-## 📥 Installation et démarrage
+### Development Servers
+- Backend: http://localhost:8080
+- Frontend: http://localhost:5173
 
-### 1️⃣ Cloner le projet
+## Prerequisites
+
+- PHP >= 8.1
+- Composer
+- PostgreSQL
+- Node.js >= 18
+- npm
+
+## Installation
+
+### Clone the Repository
 ```bash
 git clone https://github.com/manoawilliamson/TalentIA.git
 cd TalentIA
 ```
 
-### 2️⃣ Backend Setup
+### Backend Setup
 ```bash
 composer install
 cp env .env
-# Configurer .env avec vos paramètres PostgreSQL
+# Configure .env with your PostgreSQL credentials
 php spark serve
 ```
 
-### 3️⃣ Frontend Setup
+### Frontend Setup
 ```bash
 cd template
 npm install
 npm run dev
 ```
 
-### 🛠 Stack technique
-**Backend**
-- CodeIgniter 4 (PHP)
-- PostgreSQL
-- JWT Authentication
-
-**Frontend**
-- React.js
-- Tailwind CSS
-- Axios
-
-**Serveurs**
-- Backend: http://localhost:8080
-- Frontend: http://localhost:5173
-
----
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 TalentIA/
@@ -89,41 +76,37 @@ TalentIA/
 └── vendor/               # Composer dependencies
 ```
 
----
-
-## 🚀 Features
+## Features
 
 ### User Management
-- **Multi-role Authentication**: Admin, Manager, Collaborator roles
-- **User Profiles**: Comprehensive user information management
-- **Role-based Access Control**: Different permissions per role
+- Multi-role authentication (Admin, Manager, Collaborator)
+- Comprehensive user profile management
+- Role-based access control with granular permissions
 
 ### Project Management
-- **Project Creation**: Define projects with timelines and requirements
-- **Status Tracking**: Monitor project progress (EN COURS, TERMINÉ)
-- **Resource Allocation**: Assign personnel based on project needs
-- **File Attachments**: Support for project documentation
+- Project lifecycle management with timelines
+- Status tracking and progress monitoring
+- Resource allocation and assignment
+- File attachments and documentation support
 
 ### Skills Management
-- **Skill Catalog**: Organized by categories (Développement, Communication, etc.)
-- **Skill Proficiency**: Track skill levels and expertise (1-10 rating)
-- **Skill Requirements**: Define required skills for projects
-- **Person Skills**: Manage individual skill ratings
+- Categorized skill catalog
+- Skill proficiency tracking (1-10 rating scale)
+- Project skill requirements definition
+- Individual skill ratings and assessments
 
 ### Personnel Allocation
-- **Smart Matching**: Algorithm-based person-project matching
-- **Availability Tracking**: Monitor personnel availability
-- **Skill Gap Analysis**: Identify missing skills in teams
-- **Recommendation System**: AI-powered suggestions for project assignments
+- Algorithm-based person-project matching
+- Availability tracking and conflict detection
+- Skill gap analysis and identification
+- Intelligent recommendation system for project assignments
 
-### Analytics & Reporting
-- **Project Statistics**: Time analysis and progress metrics
-- **Technology Statistics**: Skill distribution insights
-- **Personnel Statistics**: Performance and utilization metrics
+### Analytics and Reporting
+- Project statistics and time analysis
+- Technology distribution insights
+- Personnel performance and utilization metrics
 
----
-
-## 🗄️ Database Schema
+## Database Schema
 
 ### Core Tables
 
@@ -168,34 +151,12 @@ CREATE TABLE skills (
 );
 ```
 
-#### Association Tables
-- **project_skills**: Links projects to required skills with proficiency levels
-- **user_skills**: Tracks user skill proficiencies
-- **person_project**: Manages project assignments
+### Association Tables
+- **project_skills** - Links projects to required skills with proficiency levels
+- **user_skills** - Tracks user skill proficiencies
+- **person_project** - Manages project assignments
 
----
-
-## 🎯 Key Controllers
-
-### Authentication
-- `Auth.php` - Login/logout functionality
-- `UserController.php` - User profile management
-
-### Core Features
-- `ProjectController.php` - CRUD operations for projects
-- `SkillController.php` - Skills management
-- `PersonController.php` - Personnel management
-- `DashboardController.php` - Main dashboard view
-
-### Specialized Controllers
-- `PersonSkillsController.php` - User skill assignments
-- `ProjectSkillsController.php` - Project skill requirements
-- `PersonProjectController.php` - Project assignments
-- `RecommendationController.php` - Smart matching recommendations
-
----
-
-## 📊 API Endpoints
+## API Endpoints
 
 ### Projects
 - `GET /api/projects` - List all projects
@@ -217,19 +178,33 @@ CREATE TABLE skills (
 - `GET /api/recommendations/project/{id}` - Get person recommendations for project
 - `GET /api/recommendations/person/{id}` - Get project recommendations for person
 
----
+## Key Controllers
 
-## 🔐 Security Features
+### Authentication
+- `Auth.php` - Login and logout functionality
+- `UserController.php` - User profile management
 
-- **Session Management**: Secure session handling
-- **Input Validation**: Form validation and sanitization
-- **SQL Injection Prevention**: Parameterized queries
-- **Role-based Authorization**: Access control by user role
-- **CORS Configuration**: Secure cross-origin requests
+### Core Features
+- `ProjectController.php` - CRUD operations for projects
+- `SkillController.php` - Skills management
+- `PersonController.php` - Personnel management
+- `DashboardController.php` - Main dashboard view
 
----
+### Specialized Controllers
+- `PersonSkillsController.php` - User skill assignments
+- `ProjectSkillsController.php` - Project skill requirements
+- `PersonProjectController.php` - Project assignments
+- `RecommendationController.php` - Smart matching recommendations
 
-## 🧪 Testing
+## Security Features
+
+- Session-based authentication with secure session handling
+- Comprehensive input validation and sanitization
+- SQL injection prevention through parameterized queries
+- Role-based authorization and access control
+- CORS configuration for secure cross-origin requests
+
+## Testing
 
 ### Running Tests
 ```bash
@@ -241,62 +216,51 @@ composer test  # Run PHPUnit tests
 - Controller endpoints
 - Authentication flows
 
----
+## Performance Considerations
 
-## 📈 Performance Considerations
+- Database optimization with indexed tables
+- View caching for frequently accessed data
+- Minified CSS and JavaScript assets
+- Optimized database views for recommendations
 
-- **Database Optimization**: Indexed tables for performance
-- **Caching**: View caching for frequently accessed data
-- **Asset Optimization**: Minified CSS/JS files
-- **Database Views**: Optimized views for recommendations
-
----
-
-## 🚀 Deployment
+## Deployment
 
 ### Production Setup
-1. Configure production database
-2. Set environment variables
+1. Configure production database credentials
+2. Set appropriate environment variables
 3. Install dependencies: `composer install --no-dev`
 4. Build frontend: `cd template && npm run build`
 5. Set file permissions for `writable/` directory
-6. Configure web server (Apache/Nginx)
+6. Configure web server (Apache or Nginx)
 
----
-
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
-2. Create feature branch
+2. Create a feature branch
 3. Make your changes
 4. Add tests for new functionality
-5. Submit pull request
+5. Submit a pull request
 
----
+## License
 
-## 📝 License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 📞 Support
+## Support
 
 For support and questions:
-- Check the documentation
-- Review existing issues
-- Create new issue for bugs or feature requests
+- Review the documentation
+- Check existing issues
+- Create a new issue for bugs or feature requests
 
----
+## Version History
 
-## 🔄 Version History
+### v1.1.0 - Skills Management and Recommendation System
+- Person skills management with rating system
+- Project skills requirements
+- Smart recommendation algorithm
+- Enhanced UI with React components
 
-- **v1.1.0** - Skills management and recommendation system
-  - Person skills management with ratings
-  - Project skills requirements
-  - Smart recommendation algorithm
-  - Enhanced UI with React components
-- **v1.0.0** - Initial release with core functionality
-  - Basic user management
-  - Project and skills management
-  - Personnel allocation features
+### v1.0.0 - Initial Release
+- Basic user management
+- Project and skills management
+- Personnel allocation features
