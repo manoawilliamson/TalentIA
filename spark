@@ -1,0 +1,43 @@
+#!/usr/bin/env php
+<?php declare(strict_types=1);
+
+/**
+ * This file is part of CodeIgniter 4 framework.
+ */
+
+if (str_starts_with(PHP_SAPI, 'cgi')) {
+    exit("The cli tool is not supported when running php-cgi. It needs php-cli to function!\n\n");
+}
+
+$minPhpVersion = '8.1';
+if (version_compare(PHP_VERSION, $minPhpVersion, '<')) {
+    exit(sprintf(
+        'Your PHP version must be %s or higher. Current version: %s',
+        $minPhpVersion,
+        PHP_VERSION
+    ));
+}
+
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
+/*
+ *---------------------------------------------------------------
+ * FIXED WORKING DIRECTORY & PATH LOADING
+ *---------------------------------------------------------------
+ */
+
+// Do NOT change directory into /public (this breaks path resolution)
+// chdir(FCPATH);  // REMOVE OR COMMENT OUT
+
+// Correctly set FCPATH
+define('FCPATH', __DIR__ . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR);
+
+// Correct path to Paths.php (from project root)
+require __DIR__ . '/app/Config/Paths.php';
+
+$paths = new Config\Paths();
+
+require $paths->systemDirectory . '/Boot.php';
+
+exit(CodeIgniter\Boot::bootSpark($paths));
