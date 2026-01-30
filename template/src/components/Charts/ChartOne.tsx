@@ -3,9 +3,9 @@ import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
 
 const periods = [
-  { label: 'Month', value: 'month' },
-  { label: 'Week', value: 'week' },
-  { label: 'Year', value: 'year' },
+  { label: 'Mois', value: 'month' },
+  { label: 'Semaine', value: 'week' },
+  { label: 'Année', value: 'year' },
 ];
 
 const baseOptions: ApexOptions = {
@@ -134,11 +134,10 @@ const ChartOne: React.FC = () => {
             {periods.map(p => (
               <button
                 key={p.value}
-                className={`rounded py-1 px-3 text-xs font-medium ${
-                  period === p.value
+                className={`rounded py-1 px-3 text-xs font-medium ${period === p.value
                     ? 'bg-white text-black shadow-card dark:bg-boxdark dark:text-white'
                     : 'text-black hover:bg-white hover:shadow-card dark:text-white dark:hover:bg-boxdark'
-                }`}
+                  }`}
                 onClick={() => setPeriod(p.value as any)}
               >
                 {p.label}

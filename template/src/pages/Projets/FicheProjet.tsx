@@ -158,14 +158,14 @@ const SkillsList = ({
                     }}
                   >
                     <FaSave className="mr-1" />
-                    Save
+                    Sauvegarder
                   </button>
                   <button
                     className="dark-button-secondary px-3 py-1 rounded-lg text-sm whitespace-nowrap"
                     onClick={onEditCancel}
                   >
                     <FaTimes className="mr-1" />
-                    Cancel
+                    Annuler
                   </button>
                 </div>
               </div>
@@ -175,7 +175,7 @@ const SkillsList = ({
               <div key={skill.idproskills} className="dark-card p-4 rounded-xl hover:bg-gray-700/50 transition-all duration-300 group">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4 min-w-0 flex-1">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
                       <FaCode className="text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -249,10 +249,10 @@ const RecommendationList = ({ projectId, onAssign }: { projectId: number, onAssi
         if (onAssign) onAssign();
       } else {
         const result = await response.json();
-        alert("Erreur : " + (result.error || "Impossible d'assigner"));
+        alert("Erreur : " + (result.error || "Impossible d'assigner le collaborateur"));
       }
     } catch (e) {
-      alert("Erreur réseau");
+      alert("Erreur réseau lors de l'assignation");
     }
   };
 
@@ -275,7 +275,7 @@ const RecommendationList = ({ projectId, onAssign }: { projectId: number, onAssi
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h5 className="text-xl font-bold text-white">Top 5 personnes recommandées (IA)</h5>
-        <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center">
           <FaStar className="text-white" />
         </div>
       </div>
@@ -285,7 +285,7 @@ const RecommendationList = ({ projectId, onAssign }: { projectId: number, onAssi
           <div key={rec.idperson || idx} className="dark-card p-4 rounded-xl hover:bg-gray-700/50 transition-all duration-300">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4 min-w-0 flex-1">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-white font-bold">{idx + 1}</span>
                 </div>
                 <div className="min-w-0 flex-1">
@@ -294,10 +294,10 @@ const RecommendationList = ({ projectId, onAssign }: { projectId: number, onAssi
                   </h6>
                   <div className="flex items-center gap-4 mt-1 flex-wrap">
                     <span className="text-xs px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full whitespace-nowrap">
-                      Score: {rec.matching_score}
+                      Note : {rec.matching_score}
                     </span>
                     <span className="text-xs text-gray-400 whitespace-nowrap">
-                      {rec.matched_skills}/{rec.total_required_skills} compétences
+                      {rec.matched_skills}/{rec.total_required_skills} compétences correspondantes
                     </span>
                   </div>
                 </div>
@@ -306,12 +306,12 @@ const RecommendationList = ({ projectId, onAssign }: { projectId: number, onAssi
                 <div className="hidden sm:block">
                   <div className="w-16 h-2 bg-gray-600 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"
+                      className="h-full bg-green-600 rounded-full"
                       style={{ width: `${Math.min((rec.matched_skills / rec.total_required_skills) * 100, 100)}%` }}
                     ></div>
                   </div>
                   <p className="text-xs text-gray-400 mt-1 whitespace-nowrap">
-                    {Math.round((rec.matched_skills / rec.total_required_skills) * 100)}% Match
+                    {Math.round((rec.matched_skills / rec.total_required_skills) * 100)}% de correspondance
                   </p>
                 </div>
                 <button
@@ -364,7 +364,7 @@ const AlertsList = ({ projectId }: { projectId: number }) => {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h5 className="text-xl font-bold text-white">Alertes Compétences Manquantes</h5>
-        <div className="w-10 h-10 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center">
           <FaExclamationTriangle className="text-white" />
         </div>
       </div>
@@ -487,7 +487,7 @@ const AssignedList = ({ projectId }: { projectId: number }) => {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h5 className="text-xl font-bold text-white">Personnes assignées</h5>
-        <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center">
           <FaUsers className="text-white" />
         </div>
       </div>
@@ -551,7 +551,7 @@ const AssignedList = ({ projectId }: { projectId: number }) => {
         {assigned.map((person, idx) => (
           <div key={person.idperson || idx} className="dark-card p-4 rounded-xl hover:bg-gray-700/50 transition-all duration-300">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white font-bold">
                   {person.name ? person.name.charAt(0).toUpperCase() : 'U'}
                 </span>
@@ -596,35 +596,35 @@ const FicheProjet = ({ data }: FicheProjetProps) => {
   const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
 
   // Function to get project skills directly from database
-const getProjectSkillsDirect = async (projectId: number) => {
-  try {
-    // Create a direct query to get project skills
-    const response = await fetch(`${BASE_URL}/api/projectskills/direct/${projectId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+  const getProjectSkillsDirect = async (projectId: number) => {
+    try {
+      // Create a direct query to get project skills
+      const response = await fetch(`${BASE_URL}/api/projectskills/direct/${projectId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Direct project skills:', data);
+        return data;
+      } else {
+        console.log('Direct query failed, trying fallback');
+        return null;
       }
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Direct project skills:', data);
-      return data;
-    } else {
-      console.log('Direct query failed, trying fallback');
+    } catch (error) {
+      console.error('Direct query error:', error);
       return null;
     }
-  } catch (error) {
-    console.error('Direct query error:', error);
-    return null;
-  }
-};
+  };
 
-useEffect(() => {
+  useEffect(() => {
     // Initialize with props data
     setSkills(data.proskills || []);
-    
+
     // Try to get project skills using multiple methods
     const loadProjectSkills = async (projectId: number) => {
       try {
@@ -635,7 +635,7 @@ useEffect(() => {
           setSkills(directSkills);
           return;
         }
-        
+
         // Method 2: Use props data if available
         const propsSkills = data.proskills || [];
         if (propsSkills.length > 0) {
@@ -643,7 +643,7 @@ useEffect(() => {
           setSkills(propsSkills);
           return;
         }
-        
+
         // Method 3: Create mock data based on database info
         // Since we know from the database that there are skills for projects
         // Let's create a basic structure for demonstration
@@ -653,15 +653,15 @@ useEffect(() => {
           { idproskills: 2, idskills: 2, skill: 'React', noteskills: '3' },
           { idproskills: 3, idskills: 4, skill: 'Node.js', noteskills: '3' }
         ].filter(skill => skill.idskills === projectId || projectId === 1); // Simple filter for demo
-        
+
         setSkills(fallbackSkills);
-        
+
       } catch (error) {
         console.error('Error loading project skills:', error);
         setSkills(data.proskills || []);
       }
     };
-    
+
     if (data.project?.id) {
       loadProjectSkills(data.project.id);
     }
@@ -847,11 +847,11 @@ useEffect(() => {
     },
     {
       ref: 'gal',
-      name: 'Fichier',
+      name: 'Fichier Joint',
       icons: GalleryIcon,
       component: data.project.file ? (
         <div className="flex flex-col items-center justify-center p-6">
-          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center mb-4">
+          <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
             <FaFileDownload className="text-white text-2xl" />
           </div>
           <a
@@ -885,10 +885,10 @@ useEffect(() => {
       {/* Project Header */}
       <div className="mb-8 text-center">
         <div className="inline-flex items-center gap-4 mb-4">
-          <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0">
             <FaProjectDiagram className="text-white text-2xl" />
           </div>
-          <h3 className="text-4xl font-bold gradient-text text-left">
+          <h3 className="text-4xl font-bold text-blue-500 text-left">
             {data.project.name}
           </h3>
         </div>
@@ -916,7 +916,7 @@ useEffect(() => {
       {/* Project Details Card */}
       <div className="dark-card rounded-2xl shadow-2xl p-8 mb-8">
         <h4 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
             <FaInfo className="text-white text-sm" />
           </div>
           Détails du projet
@@ -953,8 +953,8 @@ useEffect(() => {
                 <FaUsers className="text-purple-400 text-sm" />
               </div>
               <div className="min-w-0 flex-1">
-                <h5 className="text-gray-400 text-sm font-medium mb-1">Nombre de personnes</h5>
-                <p className="text-white break-words">{data.project.nbrperson} personnes</p>
+                <h5 className="text-gray-400 text-sm font-medium mb-1">Collaborateurs requis</h5>
+                <p className="text-white break-words">{data.project.nbrperson} collaborateurs</p>
               </div>
             </div>
 
@@ -980,7 +980,7 @@ useEffect(() => {
                 key={onglet.ref}
                 onClick={() => setActiveOngletRef(index)}
                 className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-all duration-300 whitespace-nowrap ${activeOngletRef === index
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                  ? 'bg-blue-600 text-white shadow-lg'
                   : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
                   }`}
               >

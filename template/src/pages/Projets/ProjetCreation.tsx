@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FaTag, FaCalendarAlt, FaCalendarCheck, FaUsers, FaAlignLeft, FaStickyNote, FaPaperclip, FaTimes, FaSpinner, FaPlus, FaCode, FaEdit, FaUserFriends, FaStar, FaUser, FaFileDownload, FaDownload, FaFile, FaProjectDiagram, FaInfo, FaSave } from 'react-icons/fa';
 import BASE_URL from '../../services/api';
-import { addProject, updateProject, getTechnologiesForProject, ajouterSkillProjet } from "../../services/projects.service";
+import { updateProject, ajouterSkillProjet } from "../../services/projects.service";
 import { getSkills } from "../../services/Skills.service";
-import { getProjectSkills, deleteProjectSkill, getProjectSkillsWithDetails, updateProjectSkill, addSkillToProject } from "../../services/projectskills.service";
+import { deleteProjectSkill, getProjectSkillsWithDetails, updateProjectSkill, addSkillToProject } from "../../services/projectskills.service";
 import { Projet } from "../../types/projet";
 import type { Skill } from "../../types/skill";
 
@@ -42,7 +42,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
     const [addingSkill, setAddingSkill] = useState(false);
     const [addSkillValue, setAddSkillValue] = useState<{ skillId: string; noteskills: string; checked: boolean }>({ skillId: "", noteskills: "", checked: false });
     const [projectSkillsLoading, setProjectSkillsLoading] = useState(false);
-    
+
     // Edit skill states
     const [editingSkillIndex, setEditingSkillIndex] = useState<number | null>(null);
     const [editSkillValue, setEditSkillValue] = useState<{ noteskills: string }>({ noteskills: "" });
@@ -51,8 +51,8 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
         { ref: 'basic', name: 'Informations', icon: FaInfo },
         { ref: 'tech', name: 'Technologies', icon: FaCode },
         { ref: 'rec', name: 'Recommandations', icon: FaStar },
-        { ref: 'asg', name: 'Assignées', icon: FaUserFriends },
-        { ref: 'file', name: 'Fichier', icon: FaFile },
+        { ref: 'asg', name: 'Collaborateurs', icon: FaUserFriends },
+        { ref: 'file', name: 'Fichier Joint', icon: FaFile },
     ];
 
     // Function to create fallback skills based on database data
@@ -65,7 +65,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
         // 9  |    1     |    4     |    3
         // 10 |    3     |    3     |    9
         // 11 |    3     |    4     |    4
-        
+
         // Direct skill name mapping based on your database
         const skillNames: Record<number, string> = {
             1: 'Java',
@@ -76,8 +76,8 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
             6: 'Ruby on Rails',
             7: 'Smooth Talking'
         };
-        
-        const projectSkillsData: Record<number, Array<{idskills: number; noteskills: string}>> = {
+
+        const projectSkillsData: Record<number, Array<{ idskills: number; noteskills: string }>> = {
             1: [
                 { idskills: 3, noteskills: '2' }, // PHP
                 { idskills: 2, noteskills: '3' }, // C#
@@ -91,11 +91,11 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                 { idskills: 4, noteskills: '4' }  // C/C++
             ]
         };
-        
+
         const skillsForProject = projectSkillsData[projectId] || [];
-        
+
         // Map skill IDs to actual skill names using direct mapping first, then availableSkills
-        return skillsForProject.map((skillData: {idskills: number; noteskills: string}) => {
+        return skillsForProject.map((skillData: { idskills: number; noteskills: string }) => {
             // First try direct mapping
             if (skillNames[skillData.idskills]) {
                 return {
@@ -104,7 +104,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                     noteskills: skillData.noteskills
                 };
             }
-            
+
             // Then try availableSkills
             const skill = availableSkills.find(s => s.id === skillData.idskills);
             return {
@@ -119,7 +119,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
         if (isUpdate && projet.id) {
             // Load project skills using the simple working hybrid service
             setProjectSkillsLoading(true);
-            
+
             const loadProjectSkills = async () => {
                 try {
                     const skills = await getProjectSkillsWithDetails(projet.id!);
@@ -132,7 +132,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                     setProjectSkillsLoading(false);
                 }
             };
-            
+
             loadProjectSkills();
 
             // Load recommendations
@@ -205,14 +205,14 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
             } else {
                 const response = await addProject(formData);
                 console.log('Project created response:', response);
-                
+
                 // Check if we got the project ID
                 if (response && response.id) {
                     alert('✅ Projet créé avec succès! Vous pouvez maintenant ajouter des technologies.');
-                    
+
                     // Update the projet state with the new ID so tabs become available
                     setProjet(prev => ({ ...prev, id: response.id }));
-                    
+
                     // After creating project, add the skills if any
                     if (projectSkills.length > 0) {
                         for (const skill of projectSkills) {
@@ -229,7 +229,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
             reloadTrigger();
         } catch (error: any) {
             console.error('Error saving project:', error);
-            
+
             // Show detailed error message
             if (error.response && error.response.data && error.response.data.errors) {
                 const errors = error.response.data.errors;
@@ -249,7 +249,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
     const handleDeleteSkill = async (idx: number) => {
         const skill = projectSkills[idx];
         console.log('Deleting skill:', skill);
-        
+
         if (!skill || !skill.idskills) {
             alert('Cannot delete a skill with an invalid ID.');
             return;
@@ -262,20 +262,20 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                 setProjectSkills(projectSkills.filter((_, i) => i !== idx));
                 return;
             }
-            
+
             // For existing projects, call the API
             try {
                 await deleteProjectSkill(projet.id!, skill.idskills);
                 console.log('Project skill deleted successfully');
-                
+
                 // Refresh the skills list from the server
                 const updatedSkills = await getProjectSkillsWithDetails(projet.id!);
                 setProjectSkills(updatedSkills);
-                
+
                 alert('Technologie supprimée avec succès');
             } catch (error) {
                 console.error('Error deleting project skill:', error);
-                alert('Erreur lors de la suppression: ' + (error instanceof Error ? error.message : String(error)));
+                alert('Erreur lors de la suppression : ' + (error instanceof Error ? error.message : String(error)));
             }
         } catch (error) {
             console.error('Error deleting skill:', error);
@@ -293,7 +293,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
         const skill = projectSkills[idx];
         console.log('Saving edit for skill:', skill);
         console.log('New level:', editSkillValue.noteskills);
-        
+
         if (!skill || !skill.idskills) {
             alert('Cannot save a skill with an invalid ID.');
             return;
@@ -309,17 +309,17 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                 setEditingSkillIndex(null);
                 return;
             }
-            
+
             // For existing projects, call the API
             try {
                 await updateProjectSkill(projet.id!, skill.idskills, editSkillValue.noteskills);
                 console.log('Project skill updated successfully');
-                
+
                 // Refresh the skills list from the server
                 const updatedSkills = await getProjectSkillsWithDetails(projet.id!);
                 setProjectSkills(updatedSkills);
                 setEditingSkillIndex(null);
-                
+
                 alert('Niveau de technologie mis à jour avec succès');
             } catch (error) {
                 console.error('Error updating project skill:', error);
@@ -345,7 +345,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
         // Check if skill already exists for this project
         const skillId = parseInt(addSkillValue.skillId);
         const existingSkill = projectSkills.find(skill => skill.idskills === skillId);
-        
+
         if (existingSkill) {
             alert('Cette technologie est déjà ajoutée au projet');
             return;
@@ -361,11 +361,11 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                         noteskills: addSkillValue.noteskills,
                     });
                     console.log('Project skill added successfully');
-                    
+
                     // Refresh the skills list from the server
                     const updatedSkills = await getProjectSkillsWithDetails(projet.id!);
                     setProjectSkills(updatedSkills);
-                    
+
                     alert('Technologie ajoutée avec succès');
                 } catch (error) {
                     console.error('Error adding project skill:', error);
@@ -522,7 +522,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                                 onChange={handleChange}
                                 type="number"
                                 value={projet.nbrperson || ""}
-                                placeholder="Nombre de personnes requises"
+                                placeholder="Nombre de collaborateurs requis"
                                 className="standard-input"
                             />
                         </div>
@@ -581,7 +581,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                         </div>
                     );
                 }
-                
+
                 return (
                     <div className="space-y-6">
                         <div className="flex items-center justify-between mb-4">
@@ -719,7 +719,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                         </div>
                     );
                 }
-                
+
                 return (
                     <div className="space-y-6">
                         <h3 className="text-lg font-semibold text-white">Personnes recommandées</h3>
@@ -741,7 +741,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                                                         </div>
                                                     </div>
                                                     <p className="text-gray-400 text-sm mb-2">{person.email}</p>
-                                                    
+
                                                     {/* Display person's skills */}
                                                     {person.skills && person.skills.length > 0 ? (
                                                         <div className="mt-2">
@@ -796,7 +796,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                         </div>
                     );
                 }
-                
+
                 return (
                     <div className="space-y-6">
                         <h3 className="text-lg font-semibold text-white">Personnes assignées</h3>
@@ -830,7 +830,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                         <h3 className="text-lg font-semibold text-white">Fichiers du projet</h3>
                         {projet.file ? (
                             <div className="flex flex-col items-center justify-center p-8 border border-gray-700 rounded-lg">
-                                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center mb-4">
+                                <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
                                     <FaFileDownload className="text-white text-2xl" />
                                 </div>
                                 <a
@@ -846,7 +846,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                         ) : (
                             <div className="text-center py-8">
                                 <FaFile className="text-gray-400 text-4xl mx-auto mb-4" />
-                                <p className="text-gray-400">Aucun fichier attaché</p>
+                                <p className="text-gray-400">Aucun fichier joint</p>
                             </div>
                         )}
                     </div>
@@ -873,19 +873,18 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                         const IconComponent = tab.icon;
                         const isBasicTab = tab.ref === 'basic';
                         const isDisabled = !isBasicTab && !projet.id;
-                        
+
                         return (
                             <button
                                 key={tab.ref}
                                 onClick={() => !isDisabled && setActiveTab(index)}
                                 disabled={isDisabled}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                                    activeTab === index
-                                        ? 'bg-blue-600 text-white'
-                                        : isDisabled
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeTab === index
+                                    ? 'bg-blue-600 text-white'
+                                    : isDisabled
                                         ? 'text-gray-600 cursor-not-allowed opacity-50'
                                         : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                                }`}
+                                    }`}
                                 title={isDisabled ? 'Veuillez d\'abord créer le projet' : ''}
                             >
                                 <IconComponent className="w-4 h-4" />

@@ -16,7 +16,7 @@ const TableOne = () => {
         <h4 className="text-2xl font-bold text-white">
           Top Collaborateurs
         </h4>
-        <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
           <FaTrophy className="text-white" />
         </div>
       </div>
@@ -27,7 +27,7 @@ const TableOne = () => {
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 p-4 bg-gray-700/50 rounded-xl mb-2">
             <div className="text-left">
               <h5 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                Nom
+                Utilisateur
               </h5>
             </div>
             <div className="text-center sm:text-left"></div>
@@ -39,7 +39,7 @@ const TableOne = () => {
             <div className="hidden sm:block text-center"></div>
             <div className="hidden sm:block text-center">
               <h5 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                Pourcentage
+                Participation
               </h5>
             </div>
           </div>
@@ -48,13 +48,12 @@ const TableOne = () => {
           <div className="space-y-2">
             {techs.map((tech, key) => (
               <div
-                className={`grid grid-cols-3 sm:grid-cols-5 gap-4 p-4 rounded-xl bg-gray-700/30 hover:bg-gray-700/50 transition-all duration-300 group cursor-pointer transform hover:scale-[1.01] ${
-                  key === techs.length - 1 ? '' : ''
-                }`}
+                className={`grid grid-cols-3 sm:grid-cols-5 gap-4 p-4 rounded-xl bg-gray-700/30 hover:bg-gray-700/50 transition-all duration-300 group cursor-pointer transform hover:scale-[1.01] ${key === techs.length - 1 ? '' : ''
+                  }`}
                 key={key}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white text-sm font-bold">
                       {tech.person_name ? tech.person_name.charAt(0).toUpperCase() : 'U'}
                     </span>
@@ -75,8 +74,8 @@ const TableOne = () => {
                 </div>
                 <div className="hidden sm:flex items-center justify-center">
                   <div className="w-16 h-2 bg-gray-600 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+                    <div
+                      className="h-full bg-blue-600 rounded-full transition-all duration-500"
                       style={{ width: `${Math.min(Number(tech.participation_percentage) || 0, 100)}%` }}
                     ></div>
                   </div>

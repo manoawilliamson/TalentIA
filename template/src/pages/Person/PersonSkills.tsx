@@ -26,7 +26,7 @@ const PersonSkills = () => {
         skillId: '',
         rating: 5
     });
-    const [editingSkills, setEditingSkills] = useState<{[key: number]: PersonSkill}>({});
+    const [editingSkills, setEditingSkills] = useState<{ [key: number]: PersonSkill }>({});
 
     // Load all persons
     useEffect(() => {
@@ -104,12 +104,12 @@ const PersonSkills = () => {
             // Find the skill to get its person and skill IDs
             const skillToDelete = personSkills.find(s => s.id === skillId);
             if (!skillToDelete || !selectedPerson) return;
-            
+
             // Use the API endpoint with person and skill IDs
             const response = await fetch(`${BASE_URL}/personskills/person/${selectedPerson.id}/skill/${skillToDelete.idskill}`, {
                 method: 'DELETE',
             });
-            
+
             if (response.ok) {
                 setPersonSkills(personSkills.filter(s => s.id !== skillId));
             } else {
@@ -123,7 +123,7 @@ const PersonSkills = () => {
 
     const handleEditClick = (skill: PersonSkill) => {
         setEditingId(skill.id);
-        setEditingSkills({...editingSkills, [skill.id]: {...skill}});
+        setEditingSkills({ ...editingSkills, [skill.id]: { ...skill } });
     };
 
     const handleEditSave = async (skill: PersonSkill) => {
@@ -138,11 +138,11 @@ const PersonSkills = () => {
                 console.error('No editing skill found for ID:', skill.id);
                 return;
             }
-            
+
             // Since we can't find a valid API ID for updating, we'll delete and recreate the relationship
             console.log('Using delete and recreate approach...');
             console.log('Person ID:', selectedPerson.id, 'Skill ID:', skill.idskill, 'New rating:', editingSkill.noteskill);
-            
+
             // Try multiple delete endpoints
             let deleteSuccess = false;
             const deleteEndpoints = [
@@ -151,7 +151,7 @@ const PersonSkills = () => {
                 `${BASE_URL}/personskills/personid/${selectedPerson.id}/skillid/${skill.idskill}`,
                 `${BASE_URL}/personskills?person=${selectedPerson.id}&skill=${skill.idskill}`
             ];
-            
+
             for (const endpoint of deleteEndpoints) {
                 try {
                     console.log('Trying delete endpoint:', endpoint);
@@ -167,14 +167,14 @@ const PersonSkills = () => {
                     console.log('Delete failed for endpoint:', endpoint, error);
                 }
             }
-            
+
             if (!deleteSuccess) {
                 throw new Error('Failed to delete existing skill relationship - no working endpoint found');
             }
-            
+
             // Add the new relationship with updated rating
             await addPersonSkill(selectedPerson.id, skill.idskill, editingSkill.noteskill);
-            
+
             // Refresh the skills list from server
             const updatedSkills = await getPersonSkills(selectedPerson.id);
             // Add IDs to the refreshed skills
@@ -184,7 +184,7 @@ const PersonSkills = () => {
             }));
             setPersonSkills(skillsWithIds);
             setEditingId(null);
-            setEditingSkills({...editingSkills, [skill.id]: {...skill}});
+            setEditingSkills({ ...editingSkills, [skill.id]: { ...skill } });
         } catch (error) {
             console.error('Error updating skill:', error);
             alert('Erreur lors de la mise à jour du skill');
@@ -194,7 +194,7 @@ const PersonSkills = () => {
     const handleCancelEdit = (skillId: number) => {
         setEditingId(null);
         setEditingSkills(prev => {
-            const newEditingSkills = {...prev};
+            const newEditingSkills = { ...prev };
             delete newEditingSkills[skillId];
             return newEditingSkills;
         });
@@ -206,7 +206,7 @@ const PersonSkills = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
+        <div className="min-h-screen bg-gray-950 p-6">
             <div className="max-w-7xl mx-auto">
                 <h1 className="text-3xl font-bold text-white mb-8">Gestion des Compétences</h1>
 
@@ -226,7 +226,7 @@ const PersonSkills = () => {
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                                            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                                                 <FaUser className="text-white" />
                                             </div>
                                             <div>
@@ -253,7 +253,7 @@ const PersonSkills = () => {
                                         disabled={adding}
                                         className="dark-button-primary px-4 py-2 rounded-xl font-medium flex items-center gap-2"
                                     >
-                                        <FaPlus /> Ajouter
+                                        <FaPlus /> Ajouter une compétence
                                     </button>
                                 </div>
 
@@ -272,7 +272,7 @@ const PersonSkills = () => {
                                                         onChange={(e) => setFormData({ ...formData, skillId: e.target.value })}
                                                         className="dark-input"
                                                     >
-                                                        <option value="">Choisir un skill...</option>
+                                                        <option value="">Choisir une compétence...</option>
                                                         {availableSkills.map(skill => (
                                                             <option key={skill.id} value={skill.id}>
                                                                 {skill.name}
@@ -331,7 +331,7 @@ const PersonSkills = () => {
                                                                     onChange={(e) => {
                                                                         setEditingSkills({
                                                                             ...editingSkills,
-                                                                            [skill.id]: {...(editingSkills[skill.id] || skill), noteskill: Number(e.target.value)}
+                                                                            [skill.id]: { ...(editingSkills[skill.id] || skill), noteskill: Number(e.target.value) }
                                                                         });
                                                                     }}
                                                                     className="w-full"
@@ -345,20 +345,20 @@ const PersonSkills = () => {
                                                                     onClick={() => handleEditSave(skill)}
                                                                     className="dark-button-success px-3 py-2 rounded-lg flex-1"
                                                                 >
-                                                                    <FaSave className="inline mr-1" /> Save
+                                                                    <FaSave className="inline mr-1" /> Sauvegarder
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleCancelEdit(skill.id)}
                                                                     className="dark-button-secondary px-3 py-2 rounded-lg flex-1"
                                                                 >
-                                                                    <FaTimes className="inline mr-1" /> Cancel
+                                                                    <FaTimes className="inline mr-1" /> Annuler
                                                                 </button>
                                                             </div>
                                                         </div>
                                                     ) : (
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-4 flex-1">
-                                                                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                                                                <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
                                                                     <FaStar className="text-white" />
                                                                 </div>
                                                                 <div className="flex-1">

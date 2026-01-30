@@ -13,7 +13,7 @@ const options: ApexOptions = {
     type: 'donut',
   },
   colors: ['#3C50E0', '#6577F3', '#8FD0EF', '#0FADCF'],
-  labels: ['Desktop', 'Tablet', 'Mobile', 'Unknown'],
+  labels: ['Ordinateur', 'Tablette', 'Mobile', 'Inconnu'],
   legend: {
     show: false,
     position: 'bottom',
@@ -75,7 +75,7 @@ const ChartThree: React.FC = () => {
       let result = await getStats();
       console.log(result);
 
-      let series = result.map( x => x.nbutilisation);
+      let series = result.map(x => x.nbutilisation);
 
       console.log(series)
 
@@ -92,7 +92,7 @@ const ChartThree: React.FC = () => {
   }, []);
 
   return (
-    !isLoading && 
+    !isLoading &&
     <div className="sm:px-7.5 col-span-12 rounded-sm border border-stroke bg-white px-5 pb-5 pt-7.5 shadow-default dark:border-strokedark dark:bg-boxdark xl:col-span-5">
       <div className="mb-3 justify-between gap-4 sm:flex">
         <div>
@@ -114,24 +114,24 @@ const ChartThree: React.FC = () => {
 
       <div className="-mx-8 flex flex-wrap items-center justify-center gap-y-3">
         {
-          data.map( (row, _) => 
+          data.map((row, _) =>
             <>
-            <div className="sm:w-1/2 w-full px-8" key={_}>
-              <div className="flex w-full items-center">
-                <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-primary"></span>
-                <p className="flex w-full justify-between text-sm font-medium text-black dark:text-white">
-                  <span> { row.nomskill } </span>
-                  <span> {row.nbutilisation} </span>
-                </p>
+              <div className="sm:w-1/2 w-full px-8" key={_}>
+                <div className="flex w-full items-center">
+                  <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-primary"></span>
+                  <p className="flex w-full justify-between text-sm font-medium text-black dark:text-white">
+                    <span> {row.nomskill} </span>
+                    <span> {row.nbutilisation} </span>
+                  </p>
+                </div>
               </div>
-            </div>
-            
+
             </>
-           )
+          )
         }
-        
+
+      </div>
     </div>
-  </div>
   );
 };
 

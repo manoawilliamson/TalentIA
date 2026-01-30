@@ -42,7 +42,7 @@ const ProjetList = ({ reload, enableUpdate }: ProjetListProps) => {
             setFicheData(json);
             setModalOpen(true);
         } catch (e) {
-            alert("Erreur lors du chargement du projet");
+            alert("Erreur lors du chargement des détails du projet");
         }
     };
 
@@ -67,9 +67,9 @@ const ProjetList = ({ reload, enableUpdate }: ProjetListProps) => {
             <div className="py-6 px-4 md:px-6 xl:px-7.5 border-b border-gray-700">
                 <div className="flex items-center justify-between">
                     <h4 className="text-2xl font-bold text-white">
-                        Les Projets
+                        Liste des Projets
                     </h4>
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                    <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
                         <i className="fas fa-project-diagram text-white"></i>
                     </div>
                 </div>
@@ -95,7 +95,7 @@ const ProjetList = ({ reload, enableUpdate }: ProjetListProps) => {
                                 <p className="font-semibold text-gray-300 text-sm uppercase tracking-wider">#</p>
                             </div>
                             <div className="col-span-3 hidden items-center sm:flex">
-                                <p className="font-semibold text-gray-300 text-sm uppercase tracking-wider">Nom</p>
+                                <p className="font-semibold text-gray-300 text-sm uppercase tracking-wider">Nom du Projet</p>
                             </div>
                             <div className="col-span-2 flex items-center">
                                 <p className="font-semibold text-gray-300 text-sm uppercase tracking-wider">Description</p>

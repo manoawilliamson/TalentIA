@@ -116,7 +116,7 @@ const ChartTwo: React.FC = () => {
       <div className="mb-4 justify-between gap-4 sm:flex">
         <div>
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            Pourcentage des Skills Utilisées
+            Utilisation des Compétences
           </h4>
         </div>
         <div>
@@ -126,8 +126,8 @@ const ChartTwo: React.FC = () => {
               id="#"
               className="relative z-20 inline-flex appearance-none bg-transparent py-1 pl-3 pr-8 text-sm font-medium outline-none"
             >
-              <option value="" className='dark:bg-boxdark'>This Week</option>
-              <option value="" className='dark:bg-boxdark'>Last Week</option>
+              <option value="" className='dark:bg-boxdark'>Cette Semaine</option>
+              <option value="" className='dark:bg-boxdark'>Semaine Dernière</option>
             </select>
             <span className="absolute top-1/2 right-3 z-10 -translate-y-1/2">
               <svg
