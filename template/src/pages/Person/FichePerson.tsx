@@ -385,6 +385,7 @@ const SkillsTable = ({
                     ))}
                 </tbody>
             </table>
+            </div>
         </div>
     );
 };
@@ -416,10 +417,10 @@ const FichePerson: React.FC<any> = ({ data }) => {
 
     useEffect(() => {
         getSkills().then(data => {
-            if (data && Array.isArray(data.skills)) {
-                setAvailableSkills(data.skills);
+            if (data && Array.isArray((data as any).skills)) {
+                setAvailableSkills((data as any).skills);
             } else if (Array.isArray(data)) {
-                setAvailableSkills(data);
+                setAvailableSkills(data as any);
             } else {
                 setAvailableSkills([]);
             }
@@ -540,18 +541,18 @@ const FichePerson: React.FC<any> = ({ data }) => {
     return (
         <div className="flex flex-col p-3">
             <div className="project-title mb-4">
-                <h3 className="text-4xl font-bold dark:text-white text-center">
+                <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold dark:text-white text-center">
                     {data.firstname} {data.name}
                 </h3>
             </div>
 
             <div className="details-container my-4 card p-3 rounded-lg dark:bg-blue-950 dark:text-gray-200 bg-white">
-                <div className="mb-8 border-b border-blue-100">
-                    <nav className="flex space-x-6">
+                <div className="mb-4 border-b border-blue-100">
+                    <nav className="flex space-x-2 sm:space-x-6 overflow-x-auto no-scrollbar" aria-label="Tabs">
                         {onglets.map((onglet, index) => (
                             <button
                                 key={onglet.ref}
-                                className={`py-2 px-4 border-b-2 transition-all duration-200 ${tab === index ? 'border-blue-500 text-blue-700 font-semibold' : 'border-transparent text-gray-500 hover:text-blue-500'}`}
+                                className={`py-3 px-4 border-b-2 transition-all duration-200 whitespace-nowrap text-sm sm:text-base ${tab === index ? 'border-blue-500 text-blue-700 font-semibold' : 'border-transparent text-gray-500 hover:text-blue-500'}`}
                                 onClick={() => setTab(index)}
                             >
                                 {onglet.name}

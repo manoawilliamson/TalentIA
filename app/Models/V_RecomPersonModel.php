@@ -37,6 +37,16 @@ class V_RecomPersonModel extends Model
             ", [$personId]);
             
             $recommendation['skills'] = $query->getResultArray();
+
+            // Check availability: count active projects
+            $activeCount = $this->db->query("
+                SELECT COUNT(*) as active_count 
+                FROM personproject pp 
+                JOIN project p ON p.id = pp.idproject 
+                WHERE pp.idperson = ? AND p.etat = 'EN_COURS'
+            ", [$personId])->getRow()->active_count;
+            
+            $recommendation['available'] = (int)$activeCount < 2;
         }
         
         return $recommendations;

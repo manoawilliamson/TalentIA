@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaEye, FaTrash, FaFolder, FaTimes } from 'react-icons/fa';
+import { FaEye, FaTrash, FaFolder, FaTimes, FaClock, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import { Projet } from "../../types/projet";
 import { deleteProject, getProjects } from "../../services/projects.service";
 import FicheProjet from "./FicheProjet";
@@ -75,7 +75,7 @@ const ProjetList = ({ reload, enableUpdate }: ProjetListProps) => {
                 </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 md:p-6 overflow-x-auto">
                 {isLoading ? (
                     <div className="flex justify-center items-center py-12">
                         <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -90,65 +90,80 @@ const ProjetList = ({ reload, enableUpdate }: ProjetListProps) => {
                 ) : (
                     <div className="space-y-3">
                         {/* Table Header */}
-                        <div className="grid grid-cols-6 gap-4 p-4 bg-gray-700/50 rounded-xl">
+                        <div className="grid grid-cols-4 sm:grid-cols-7 gap-4 p-4 bg-gray-700/50 rounded-xl min-w-[600px] sm:min-w-0">
                             <div className="col-span-1 flex items-center">
-                                <p className="font-semibold text-gray-300 text-sm uppercase tracking-wider">#</p>
+                                <p className="font-semibold text-gray-300 text-xs sm:text-sm uppercase tracking-wider">#</p>
                             </div>
-                            <div className="col-span-3 hidden items-center sm:flex">
-                                <p className="font-semibold text-gray-300 text-sm uppercase tracking-wider">Nom du Projet</p>
+                            <div className="col-span-1 sm:col-span-2 flex items-center">
+                                <p className="font-semibold text-gray-300 text-xs sm:text-sm uppercase tracking-wider">Nom / Desc</p>
                             </div>
-                            <div className="col-span-2 flex items-center">
-                                <p className="font-semibold text-gray-300 text-sm uppercase tracking-wider">Description</p>
+                            <div className="col-span-1 flex items-center">
+                                <p className="font-semibold text-gray-300 text-xs sm:text-sm uppercase tracking-wider text-center w-full">Statut</p>
                             </div>
                             <div className="col-span-1 flex items-center justify-center">
-                                <p className="font-semibold text-gray-300 text-sm uppercase tracking-wider">Actions</p>
+                                <p className="font-semibold text-gray-300 text-xs sm:text-sm uppercase tracking-wider">Actions</p>
                             </div>
                         </div>
 
                         {/* Table Body */}
                         {data.map((product, key) => (
-                            <div
-                                className="grid grid-cols-6 gap-4 p-4 rounded-xl bg-gray-700/30 hover:bg-gray-700/50 transition-all duration-300 group cursor-pointer transform hover:scale-[1.01]"
-                                key={key}
-                                onClick={() => openFicheModal(product.id)}
-                            >
-                                <div className="col-span-1 flex items-center">
-                                    <span className="text-white font-bold text-sm bg-gray-600/50 px-2 py-1 rounded">
-                                        #{product.id}
-                                    </span>
-                                </div>
-                                <div className="col-span-3 hidden items-center sm:flex">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-gray-600/50 rounded-lg flex items-center justify-center">
-                                            <FaFolder className="text-blue-400 text-lg" />
+                                <div
+                                    className="grid grid-cols-4 sm:grid-cols-7 gap-4 p-4 rounded-xl bg-gray-700/30 hover:bg-gray-700/50 transition-all duration-300 group cursor-pointer transform hover:scale-[1.01] min-w-[600px] sm:min-w-0"
+                                    key={key}
+                                    onClick={() => openFicheModal(product.id ?? 0)}
+                                >
+                                    <div className="col-span-1 flex items-center">
+                                        <span className="text-white font-bold text-xs sm:text-sm bg-gray-600/50 px-2 py-1 rounded">
+                                            #{product.id}
+                                        </span>
+                                    </div>
+                                    <div className="col-span-1 sm:col-span-2 flex items-center">
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                                            <p className="text-white font-medium text-sm sm:text-base">
+                                                {product.name}
+                                            </p>
+                                            <p className="text-gray-400 text-[10px] sm:text-xs line-clamp-1">
+                                                {product.description}
+                                            </p>
                                         </div>
-                                        <p className="text-white font-medium">
-                                            {product.name}
-                                        </p>
+                                    </div>
+                                    <div className="col-span-1 flex items-center">
+                                        {(() => {
+                                            const etat = product.etat || 'PLANIFIÉ';
+                                            if (etat === 'EN_COURS') return (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 rounded-lg text-[10px] sm:text-xs font-semibold">
+                                                    <FaClock className="hidden xs:inline" />En cours
+                                                </span>
+                                            );
+                                            if (etat === 'TERMINÉ') return (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-500/20 text-green-300 border border-green-500/30 rounded-lg text-[10px] sm:text-xs font-semibold">
+                                                    <FaCheckCircle className="hidden xs:inline" />Terminé
+                                                </span>
+                                            );
+                                            return (
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg text-[10px] sm:text-xs font-semibold">
+                                                    <FaTimesCircle className="hidden xs:inline" />Planifié
+                                                </span>
+                                            );
+                                        })()}
+                                    </div>
+                                    <div className="col-span-1 flex items-center justify-center gap-1 sm:gap-2" onClick={e => { e.stopPropagation(); }}>
+                                        <button
+                                            className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-500/20 rounded-lg flex items-center justify-center hover:bg-blue-500/30 transition-colors group"
+                                            onClick={() => openFicheModal(product.id ?? 0)}
+                                            title="Voir les détails"
+                                        >
+                                            <FaEye className="text-blue-400 text-xs sm:text-sm" />
+                                        </button>
+                                        <button
+                                            className="w-7 h-7 sm:w-8 sm:h-8 bg-red-500/20 rounded-lg flex items-center justify-center hover:bg-red-500/30 transition-colors group"
+                                            onClick={() => deleteSkills(product.id)}
+                                            title="Supprimer"
+                                        >
+                                            <FaTrash className="text-red-400 text-xs sm:text-sm" />
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="col-span-2 flex items-center">
-                                    <p className="text-gray-300 text-sm line-clamp-2">
-                                        {product.description}
-                                    </p>
-                                </div>
-                                <div className="col-span-1 flex items-center justify-center gap-2" onClick={e => { e.stopPropagation(); }}>
-                                    <button
-                                        className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center hover:bg-blue-500/30 transition-colors group"
-                                        onClick={() => openFicheModal(product.id)}
-                                        title="Voir les détails"
-                                    >
-                                        <FaEye className="text-blue-400 text-sm" />
-                                    </button>
-                                    <button
-                                        className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center hover:bg-red-500/30 transition-colors group"
-                                        onClick={() => deleteSkills(product.id)}
-                                        title="Supprimer"
-                                    >
-                                        <FaTrash className="text-red-400 text-sm" />
-                                    </button>
-                                </div>
-                            </div>
                         ))}
                     </div>
                 )}

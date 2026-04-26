@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { addPerson, updatePerson } from "../../services/Person.service"; // <-- Ajoute cette ligne
+import { FaUser, FaSave, FaEnvelope, FaPhone, FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
+import { addPerson, updatePerson } from "../../services/Person.service";
 
 interface Person {
   id?: number;
@@ -128,99 +129,120 @@ const validate = () => {
 
   return (
     !loading && (
-      <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div className="border-b border-stroke py-4 px-6.5 dark:border-strokedark">
-          <h3 className="font-medium text-black dark:text-white">
+      <div className="bg-white/80 backdrop-blur-xl border border-white/50 rounded-xl p-8 shadow-lg">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+            <FaUser className="text-blue-600 text-sm" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900">
             {isUpdate ? "Modifier une personne" : "Ajouter une personne"}
           </h3>
         </div>
-        <div>
-          <div className="p-6.5">
-            <div className="mb-4.5">
-              <label className="mb-2.5 block text-black dark:text-white">Name</label>
-              <input
-                type="text"
-                name="name"
-                value={person.name}
-                onChange={handleChange}
-                className="standard-input"
-                placeholder="Enter name"
-              />
-              {errors.name && <span className="error-message text-red-500">{errors.name}</span>}
-            </div>
-
-            <div className="mb-4.5">
-              <label className="mb-2.5 block text-black dark:text-white">First Name</label>
-              <input
-                type="text"
-                name="firstname"
-                value={person.firstname}
-                onChange={handleChange}
-                className="standard-input"
-                placeholder="Enter first name"
-              />
-              {errors.firstname && <span className="error-message text-red-500">{errors.firstname}</span>}
-            </div>
-
-            <div className="mb-4.5">
-              <label className="mb-2.5 block text-black dark:text-white">Birthday</label>
-              <input
-                type="date"
-                name="birthday"
-                value={person.birthday}
-                onChange={handleChange}
-                className="standard-input"
-              />
-              {errors.birthday && <span className="error-message text-red-500">{errors.birthday}</span>}
-            </div>
-
-            <div className="mb-4.5">
-              <label className="mb-2.5 block text-black dark:text-white">Address</label>
-              <input
-                type="text"
-                name="address"
-                value={person.address}
-                onChange={handleChange}
-                className="standard-input"
-                placeholder="Enter address"
-              />
-              {errors.address && <span className="error-message text-red-500">{errors.address}</span>}
-            </div>
-
-            <div className="mb-4.5">
-              <label className="mb-2.5 block text-black dark:text-white">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={person.email}
-                onChange={handleChange}
-                className="standard-input"
-                placeholder="Enter email"
-              />
-              {errors.email && <span className="error-message text-red-500">{errors.email}</span>}
-            </div>
-
-            <div className="mb-4.5">
-              <label className="mb-2.5 block text-black dark:text-white">Telephone</label>
-              <input
-                type="text"
-                name="telephone"
-                value={person.telephone}
-                onChange={handleChange}
-                className="standard-input"
-                placeholder="Enter telephone"
-              />
-              {errors.telephone && <span className="error-message text-red-500">{errors.telephone}</span>}
-            </div>
-
-            <button
-              type="button"
-              onClick={performAction}
-              className="flex w-full justify-center rounded bg-primary p-3 font-medium text-gray hover:bg-opacity-90"
-            >
-              {actionName}
-            </button>
+        
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <FaUser className="mr-2 inline text-blue-600" />
+              Nom
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={person.name}
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-white/80 backdrop-blur border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+              placeholder="Entrez le nom"
+            />
+            {errors.name && <span className="error-message text-red-500 text-sm mt-1">{errors.name}</span>}
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <FaUser className="mr-2 inline text-blue-600" />
+              Prénom
+            </label>
+            <input
+              type="text"
+              name="firstname"
+              value={person.firstname}
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-white/80 backdrop-blur border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+              placeholder="Entrez le prénom"
+            />
+            {errors.firstname && <span className="error-message text-red-500 text-sm mt-1">{errors.firstname}</span>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <FaCalendarAlt className="mr-2 inline text-blue-600" />
+              Date de naissance
+            </label>
+            <input
+              type="date"
+              name="birthday"
+              value={person.birthday}
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-white/80 backdrop-blur border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+            />
+            {errors.birthday && <span className="error-message text-red-500 text-sm mt-1">{errors.birthday}</span>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <FaMapMarkerAlt className="mr-2 inline text-blue-600" />
+              Adresse
+            </label>
+            <input
+              type="text"
+              name="address"
+              value={person.address}
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-white/80 backdrop-blur border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+              placeholder="Entrez l'adresse"
+            />
+            {errors.address && <span className="error-message text-red-500 text-sm mt-1">{errors.address}</span>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <FaEnvelope className="mr-2 inline text-blue-600" />
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={person.email}
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-white/80 backdrop-blur border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+              placeholder="Entrez l'email"
+            />
+            {errors.email && <span className="error-message text-red-500 text-sm mt-1">{errors.email}</span>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <FaPhone className="mr-2 inline text-blue-600" />
+              Téléphone
+            </label>
+            <input
+              type="tel"
+              name="telephone"
+              value={person.telephone}
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-white/80 backdrop-blur border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
+              placeholder="Entrez le numéro de téléphone"
+            />
+            {errors.telephone && <span className="error-message text-red-500 text-sm mt-1">{errors.telephone}</span>}
+          </div>
+
+          <button
+            type="button"
+            onClick={performAction}
+            className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 font-medium flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25"
+          >
+            <FaSave className="text-sm" />
+            {actionName}
+          </button>
         </div>
       </div>
     )

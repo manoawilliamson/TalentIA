@@ -61,6 +61,20 @@ public function store()
             ])->setStatusCode(409);
         }
 
+        // --- NEW: Enforce 2-project limit ---
+        $activeProjectCount = $personProjectModel
+            ->join('project', 'project.id = personproject.idproject')
+            ->where('personproject.idperson', $input['idperson'])
+            ->where('project.etat', 'EN_COURS')
+            ->countAllResults();
+
+        if ($activeProjectCount >= 2) {
+            return $this->response->setJSON([
+                "error" => "Le collaborateur est déjà assigné à 2 projets actifs."
+            ])->setStatusCode(400);
+        }
+        // ------------------------------------
+
         // Vérifie le nombre de personnes déjà assignées au projet
         $currentCount = $personProjectModel
             ->where('idproject', $input['idprojet'])
@@ -109,12 +123,95 @@ public function store()
 
     public function recommendation($idproject)
     {
-        $recommendationModel = new V_RecomPersonModel();
-        $result = $recommendationModel->getTop5ForProject($idproject);
+        $db = \Config\Database::connect();
 
-        return $this->response->setJSON([
-            'recommendations' => $result
-        ]);
+        // 1. Get the required skill IDs for this project
+        $skillIds = $db->table('projectskills')
+            ->select('idskills')
+            ->where('idproject', $idproject)
+            ->get()
+            ->getResultArray();
+
+        $skillIdList = array_column($skillIds, 'idskills');
+
+        if (empty($skillIdList)) {
+            // No skills configured for this project — return all persons with availability
+            $allPersons = $db->query("
+                SELECT
+                    p.id         AS idperson,
+                    p.name,
+                    p.firstname,
+                    p.email,
+                    0            AS matching_score,
+                    0            AS matched_skills,
+                    (
+                        SELECT COUNT(*) 
+                        FROM personproject pp2
+                        JOIN project pr2 ON pr2.id = pp2.idproject
+                        WHERE pp2.idperson = p.id AND pr2.etat = 'EN_COURS'
+                    ) < 2 AS available
+                FROM person p
+                ORDER BY p.name ASC
+            ")->getResultArray();
+
+            foreach ($allPersons as &$person) {
+                $person['skills']     = [];
+                $person['available']  = (bool)$person['available'];
+            }
+
+            return $this->response->setJSON(['recommendations' => $allPersons]);
+        }
+
+        // 2. Build IN clause safely
+        $placeholders = implode(',', array_fill(0, count($skillIdList), '?'));
+
+        // 3. Main recommendation query
+        $sql = "
+            SELECT
+                p.id                                    AS idperson,
+                p.name,
+                p.firstname,
+                p.email,
+                ROUND(AVG(ps.noteskill), 2)             AS matching_score,
+                COUNT(DISTINCT ps.idskill)              AS matched_skills,
+                (
+                    SELECT COUNT(*) 
+                    FROM personproject pp2
+                    JOIN project pr2 ON pr2.id = pp2.idproject
+                    WHERE pp2.idperson = p.id AND pr2.etat = 'EN_COURS'
+                ) < 2 AS available
+            FROM person p
+            JOIN personskills ps ON ps.idperson = p.id
+            WHERE ps.idskill IN ($placeholders)
+            GROUP BY p.id, p.name, p.firstname, p.email
+            ORDER BY matching_score DESC, matched_skills DESC
+        ";
+
+        $persons = $db->query($sql, $skillIdList)->getResultArray();
+
+        // 4. Attach full skill list (across ALL project skills) for each person
+        foreach ($persons as &$person) {
+            $personId = $person['idperson'];
+
+            $skillsQuery = $db->query("
+                SELECT
+                    s.id,
+                    s.name   AS skill_name,
+                    ps.noteskill,
+                    s.category,
+                    CASE WHEN ps.idskill IN ($placeholders) THEN true ELSE false END AS is_required
+                FROM personskills ps
+                JOIN skills s ON s.id = ps.idskill
+                WHERE ps.idperson = ?
+                ORDER BY ps.noteskill DESC
+            ", array_merge($skillIdList, [$personId]));
+
+            $person['skills']    = $skillsQuery->getResultArray();
+            $person['available'] = (bool)$person['available'];
+            $person['matching_score'] = (float)$person['matching_score'];
+        }
+
+        return $this->response->setJSON(['recommendations' => $persons]);
     }
 
     public function delete($id)

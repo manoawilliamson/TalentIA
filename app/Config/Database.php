@@ -27,7 +27,7 @@ class Database extends Config
     public array $default = [
         'DSN'          => '',
         'hostname'     => 'localhost',
-        'username'     => 'postgres',        // Your PostgreSQL username
+        'username'     => 'manoawilliamson',        // Your PostgreSQL username
         'password'     => 'root',        // Your PostgreSQL password
         'database'     => 'talentia',    // Your database name
         'DBDriver'     => 'Postgre',     // PostgreSQL driver name

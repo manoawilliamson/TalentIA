@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { FaTag, FaCalendarAlt, FaCalendarCheck, FaUsers, FaAlignLeft, FaStickyNote, FaPaperclip, FaTimes, FaSpinner, FaPlus, FaCode, FaEdit, FaUserFriends, FaStar, FaUser, FaFileDownload, FaDownload, FaFile, FaProjectDiagram, FaInfo, FaSave } from 'react-icons/fa';
+import { FaTag, FaCalendarAlt, FaCalendarCheck, FaUsers, FaAlignLeft, FaStickyNote, FaPaperclip, FaTimes, FaSpinner, FaPlus, FaCode, FaEdit, FaUserFriends, FaStar, FaUser, FaFileDownload, FaDownload, FaFile, FaProjectDiagram, FaInfo, FaSave, FaSync } from 'react-icons/fa';
 import BASE_URL from '../../services/api';
-import { updateProject, ajouterSkillProjet } from "../../services/projects.service";
+import { addProject, updateProject, ajouterSkillProjet } from "../../services/projects.service";
 import { getSkills } from "../../services/Skills.service";
 import { deleteProjectSkill, getProjectSkillsWithDetails, updateProjectSkill, addSkillToProject } from "../../services/projectskills.service";
 import { Projet } from "../../types/projet";
@@ -42,6 +42,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
     const [addingSkill, setAddingSkill] = useState(false);
     const [addSkillValue, setAddSkillValue] = useState<{ skillId: string; noteskills: string; checked: boolean }>({ skillId: "", noteskills: "", checked: false });
     const [projectSkillsLoading, setProjectSkillsLoading] = useState(false);
+    const [recommendationsLoading, setRecommendationsLoading] = useState(false);
 
     // Edit skill states
     const [editingSkillIndex, setEditingSkillIndex] = useState<number | null>(null);
@@ -135,22 +136,9 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
 
             loadProjectSkills();
 
-            // Load recommendations
-            fetch(`${BASE_URL}/personproject/recommendation/${projet.id}`)
-                .then(res => res.json())
-                .then(data => {
-                    setRecommendations(data.recommendations || []);
-                })
-                .catch(err => console.error('Error loading recommendations:', err));
-
-            // Load assigned persons
-            fetch(`${BASE_URL}/personproject/${projet.id}`)
-                .then(res => res.json())
-                .then(data => {
-                    console.log('Assigned persons data:', data);
-                    setAssignedPersons(data.persons || []);
-                })
-                .catch(err => console.error('Error loading assigned persons:', err));
+            // Initial load of recommendations and assignments
+            fetchRecommendations();
+            fetchAssignedPersons();
         }
 
         // Load available skills
@@ -162,6 +150,31 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
             }
         });
     }, [isUpdate, projet.id]);
+
+    const fetchRecommendations = async () => {
+        if (!projet.id) return;
+        setRecommendationsLoading(true);
+        try {
+            const response = await fetch(`${BASE_URL}/personproject/recommendation/${projet.id}`);
+            const data = await response.json();
+            setRecommendations(data.recommendations || []);
+        } catch (err) {
+            console.error('Error loading recommendations:', err);
+        } finally {
+            setRecommendationsLoading(false);
+        }
+    };
+
+    const fetchAssignedPersons = async () => {
+        if (!projet.id) return;
+        try {
+            const response = await fetch(`${BASE_URL}/personproject/${projet.id}`);
+            const data = await response.json();
+            setAssignedPersons(data.persons || []);
+        } catch (err) {
+            console.error('Error loading assigned persons:', err);
+        }
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -188,6 +201,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
         formData.append('dateend', projet.dateend || '');
         formData.append('nbrperson', (projet.nbrperson || 0).toString());
         formData.append('remark', projet.remark || '');
+        formData.append('etat', projet.etat || 'PLANIFIÉ');
 
         // Add skills data for new projects
         if (!isUpdate && projectSkills.length > 0) {
@@ -201,14 +215,14 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
         try {
             if (isUpdate && projet.id) {
                 await updateProject(projet);
-                alert('✅ Projet mis à jour avec succès!');
+                alert('Projet mis à jour avec succès!');
             } else {
                 const response = await addProject(formData);
                 console.log('Project created response:', response);
 
                 // Check if we got the project ID
                 if (response && response.id) {
-                    alert('✅ Projet créé avec succès! Vous pouvez maintenant ajouter des technologies.');
+                    alert('Projet créé avec succès! Vous pouvez maintenant ajouter des technologies.');
 
                     // Update the projet state with the new ID so tabs become available
                     setProjet(prev => ({ ...prev, id: response.id }));
@@ -223,7 +237,7 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                         }
                     }
                 } else {
-                    alert('⚠️ Projet créé mais l\'ID n\'a pas été retourné. Veuillez rafraîchir la page.');
+                    alert('Projet créé mais l\'ID n\'a pas été retourné. Veuillez rafraîchir la page.');
                 }
             }
             reloadTrigger();
@@ -234,11 +248,11 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
             if (error.response && error.response.data && error.response.data.errors) {
                 const errors = error.response.data.errors;
                 const errorMessages = Object.values(errors).join('\n');
-                alert('❌ Erreur de validation:\n' + errorMessages);
+                alert('Erreur de validation:\n' + errorMessages);
             } else if (error.response && error.response.data && error.response.data.error) {
-                alert('❌ Erreur: ' + error.response.data.error);
+                alert('Erreur: ' + error.response.data.error);
             } else {
-                alert('❌ Erreur lors de la sauvegarde du projet. Veuillez vérifier tous les champs requis.');
+                alert('Erreur lors de la sauvegarde du projet. Veuillez vérifier tous les champs requis.');
             }
         } finally {
             setSubmitting(false);
@@ -453,8 +467,8 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                     <div className="space-y-6">
                         {/* Basic project information */}
                         <div className="group">
-                            <label className="block text-sm font-medium text-gray-300 mb-2 group-focus-within:text-blue-400 transition-colors">
-                                <FaTag className="mr-2 inline" />
+                            <label className="block text-sm font-medium text-gray-700 mb-2 group-focus-within:text-blue-600 transition-colors">
+                                <FaTag className="mr-2 inline text-blue-600" />
                                 Nom du projet
                             </label>
                             <input
@@ -463,13 +477,13 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                                 type="text"
                                 placeholder="Entrez le nom du projet"
                                 value={projet.name}
-                                className="standard-input"
+                                className="w-full px-4 py-3 bg-white/80 backdrop-blur border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                             />
                         </div>
 
                         <div className="group">
-                            <label className="block text-sm font-medium text-gray-300 mb-2 group-focus-within:text-blue-400 transition-colors">
-                                <FaAlignLeft className="mr-2 inline" />
+                            <label className="block text-sm font-medium text-gray-700 mb-2 group-focus-within:text-blue-600 transition-colors">
+                                <FaAlignLeft className="mr-2 inline text-blue-600" />
                                 Description du projet
                             </label>
                             <textarea
@@ -478,14 +492,14 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                                 value={projet.description}
                                 placeholder="Décrivez votre projet en détail..."
                                 rows={6}
-                                className="standard-input resize-none"
+                                className="w-full px-4 py-3 bg-white/80 backdrop-blur border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 resize-none"
                             />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="group">
-                                <label className="block text-sm font-medium text-gray-300 mb-2 group-focus-within:text-blue-400 transition-colors">
-                                    <FaCalendarAlt className="mr-2 inline" />
+                                <label className="block text-sm font-medium text-gray-700 mb-2 group-focus-within:text-blue-600 transition-colors">
+                                    <FaCalendarAlt className="mr-2 inline text-blue-600" />
                                     Date de début
                                 </label>
                                 <input
@@ -493,13 +507,13 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                                     onChange={handleChange}
                                     type="date"
                                     value={projet.datebegin || ""}
-                                    className="standard-input"
+                                    className="w-full px-4 py-3 bg-white/80 backdrop-blur border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                                 />
                             </div>
 
                             <div className="group">
-                                <label className="block text-sm font-medium text-gray-300 mb-2 group-focus-within:text-blue-400 transition-colors">
-                                    <FaCalendarCheck className="mr-2 inline" />
+                                <label className="block text-sm font-medium text-gray-700 mb-2 group-focus-within:text-blue-600 transition-colors">
+                                    <FaCalendarCheck className="mr-2 inline text-blue-600" />
                                     Date de fin
                                 </label>
                                 <input
@@ -507,14 +521,14 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                                     onChange={handleChange}
                                     type="date"
                                     value={projet.dateend || ""}
-                                    className="standard-input"
+                                    className="w-full px-4 py-3 bg-white/80 backdrop-blur border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                                 />
                             </div>
                         </div>
 
                         <div className="group">
-                            <label className="block text-sm font-medium text-gray-300 mb-2 group-focus-within:text-blue-400 transition-colors">
-                                <FaUsers className="mr-2 inline" />
+                            <label className="block text-sm font-medium text-gray-700 mb-2 group-focus-within:text-blue-600 transition-colors">
+                                <FaUsers className="mr-2 inline text-blue-600" />
                                 Nombre de personnes requises
                             </label>
                             <input
@@ -523,13 +537,13 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                                 type="number"
                                 value={projet.nbrperson || ""}
                                 placeholder="Nombre de collaborateurs requis"
-                                className="standard-input"
+                                className="w-full px-4 py-3 bg-white/80 backdrop-blur border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                             />
                         </div>
 
                         <div className="group">
-                            <label className="block text-sm font-medium text-gray-300 mb-2 group-focus-within:text-blue-400 transition-colors">
-                                <FaStickyNote className="mr-2 inline" />
+                            <label className="block text-sm font-medium text-gray-700 mb-2 group-focus-within:text-blue-600 transition-colors">
+                                <FaStickyNote className="mr-2 inline text-blue-600" />
                                 Remarques
                             </label>
                             <textarea
@@ -538,28 +552,45 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                                 value={projet.remark}
                                 placeholder="Ajoutez des remarques ou notes supplémentaires..."
                                 rows={4}
-                                className="standard-input resize-none"
+                                className="w-full px-4 py-3 bg-white/80 backdrop-blur border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 resize-none"
                             />
                         </div>
 
                         <div className="group">
-                            <label className="block text-sm font-medium text-gray-300 mb-2 group-focus-within:text-blue-400 transition-colors">
-                                <FaPaperclip className="mr-2 inline" />
+                            <label className="block text-sm font-medium text-gray-700 mb-2 group-focus-within:text-blue-600 transition-colors">
+                                Statut du projet <span className="text-xs font-normal text-gray-500 ml-2">(Calculé automatiquement par les dates)</span>
+                            </label>
+                            <select
+                                name="etat"
+                                value={projet.etat || 'PLANIFIÉ'}
+                                onChange={(e) => setProjet({ ...projet, etat: e.target.value })}
+                                disabled
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed appearance-none"
+                            >
+                                <option value="PLANIFIÉ">Planifié</option>
+                                <option value="EN_COURS">En cours</option>
+                                <option value="TERMINÉ">Terminé</option>
+                            </select>
+                        </div>
+
+                        <div className="group">
+                            <label className="block text-sm font-medium text-gray-700 mb-2 group-focus-within:text-blue-600 transition-colors">
+                                <FaPaperclip className="mr-2 inline text-blue-600" />
                                 Fichiers du projet
                             </label>
                             <div className="relative">
                                 <input
                                     type="file"
                                     onChange={handleFileChange}
-                                    className="standard-input"
+                                    className="w-full px-4 py-3 bg-white/80 backdrop-blur border border-gray-200 rounded-xl text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all duration-200"
                                 />
                                 {file && (
-                                    <div className="mt-2 flex items-center gap-2 text-sm text-gray-400">
-                                        <FaFile />
-                                        <span>{file.name}</span>
+                                    <div className="mt-2 flex items-center gap-2 text-sm text-gray-600 p-3 bg-blue-50 rounded-lg">
+                                        <FaFile className="text-blue-600" />
+                                        <span className="text-gray-900">{file.name}</span>
                                         <button
                                             onClick={() => setFile(null)}
-                                            className="text-red-400 hover:text-red-300"
+                                            className="ml-auto text-red-500 hover:text-red-700 transition-colors"
                                         >
                                             <FaTimes />
                                         </button>
@@ -575,8 +606,10 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                 if (!projet.id) {
                     return (
                         <div className="text-center py-12">
-                            <FaCode className="text-gray-400 text-5xl mx-auto mb-4" />
-                            <p className="text-gray-400 text-lg mb-2">Les technologies ne peuvent être ajoutées qu'après la création du projet</p>
+                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <FaCode className="text-gray-400 text-2xl" />
+                            </div>
+                            <p className="text-gray-600 text-lg mb-2">Les technologies ne peuvent être ajoutées qu'après la création du projet</p>
                             <p className="text-gray-500 text-sm">Veuillez d'abord sauvegarder le projet dans l'onglet "Informations"</p>
                         </div>
                     );
@@ -585,10 +618,10 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                 return (
                     <div className="space-y-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-white">Technologies requises</h3>
+                            <h3 className="text-lg font-semibold text-gray-900">Technologies requises</h3>
                             <button
                                 onClick={() => setAddingSkill(true)}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 flex items-center gap-2 shadow-lg shadow-blue-500/25"
                             >
                                 <FaPlus />
                                 Ajouter une technologie
@@ -596,12 +629,12 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                         </div>
 
                         {addingSkill && (
-                            <div className="border border-gray-700 rounded-lg p-4">
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <select
                                         value={addSkillValue.skillId}
                                         onChange={(e) => setAddSkillValue({ ...addSkillValue, skillId: e.target.value })}
-                                        className="standard-input"
+                                        className="w-full px-4 py-3 bg-white/80 backdrop-blur border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                                     >
                                         <option value="">Sélectionner une technologie</option>
                                         {availableSkills.map(skill => (
@@ -617,19 +650,19 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                                         max="5"
                                         value={addSkillValue.noteskills}
                                         onChange={(e) => setAddSkillValue({ ...addSkillValue, noteskills: e.target.value })}
-                                        className="standard-input"
+                                        className="w-full px-4 py-3 bg-white/80 backdrop-blur border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                                     />
                                 </div>
-                                <div className="flex gap-2 mt-4">
+                                <div className="flex gap-3 mt-6">
                                     <button
                                         onClick={handleAddSkill}
-                                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                        className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 font-medium shadow-lg shadow-green-500/25"
                                     >
                                         Ajouter
                                     </button>
                                     <button
                                         onClick={() => setAddingSkill(false)}
-                                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                                        className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium"
                                     >
                                         Annuler
                                     </button>
@@ -637,61 +670,65 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                             </div>
                         )}
 
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {projectSkillsLoading ? (
                                 <div className="flex justify-center items-center py-8">
                                     <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                                 </div>
                             ) : projectSkills && Array.isArray(projectSkills) && projectSkills.length > 0 ? (
                                 projectSkills.map((skill, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-3 border border-gray-700 rounded-lg">
+                                    <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors">
                                         {editingSkillIndex === idx ? (
                                             <div className="flex items-center gap-3 flex-1">
-                                                <FaCode className="text-blue-400" />
-                                                <span className="text-white font-medium">{skill.skill?.name || skill.name || 'Unknown'}</span>
+                                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                    <FaCode className="text-blue-600 text-sm" />
+                                                </div>
+                                                <span className="text-gray-900 font-medium">{skill.skill?.name || skill.name || 'Unknown'}</span>
                                                 <input
                                                     type="number"
                                                     min="1"
                                                     max="5"
                                                     value={editSkillValue.noteskills}
                                                     onChange={(e) => setEditSkillValue({ noteskills: e.target.value })}
-                                                    className="w-20 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white"
+                                                    className="w-20 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                                                     placeholder="Niveau"
                                                 />
                                                 <div className="flex gap-2">
                                                     <button
                                                         onClick={() => handleSaveEditSkill(idx)}
-                                                        className="w-6 h-6 bg-green-500/20 rounded flex items-center justify-center hover:bg-green-500/30 transition-colors"
+                                                        className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center hover:bg-green-200 transition-colors"
                                                     >
-                                                        <FaSave className="text-green-400 text-xs" />
+                                                        <FaSave className="text-green-600 text-sm" />
                                                     </button>
                                                     <button
                                                         onClick={handleCancelEditSkill}
-                                                        className="w-6 h-6 bg-gray-500/20 rounded flex items-center justify-center hover:bg-gray-500/30 transition-colors"
+                                                        className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-300 transition-colors"
                                                     >
-                                                        <FaTimes className="text-gray-400 text-xs" />
+                                                        <FaTimes className="text-gray-600 text-sm" />
                                                     </button>
                                                 </div>
                                             </div>
                                         ) : (
                                             <div className="flex items-center justify-between w-full">
                                                 <div className="flex items-center gap-3">
-                                                    <FaCode className="text-blue-400" />
-                                                    <span className="text-white">{skill.skill?.name || skill.name || 'Unknown'}</span>
-                                                    <span className="text-gray-400 text-sm">Niveau: {skill.noteskills}</span>
+                                                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                        <FaCode className="text-blue-600 text-sm" />
+                                                    </div>
+                                                    <span className="text-gray-900 font-medium">{skill.skill?.name || skill.name || 'Unknown'}</span>
+                                                    <span className="text-gray-600 text-sm bg-gray-200 px-2 py-1 rounded-lg">Niveau: {skill.noteskills}</span>
                                                 </div>
                                                 <div className="flex gap-2">
                                                     <button
                                                         onClick={() => handleEditSkill(idx)}
-                                                        className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center hover:bg-blue-500/30 transition-colors"
+                                                        className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center hover:bg-blue-200 transition-colors"
                                                     >
-                                                        <FaEdit className="text-blue-400 text-xs" />
+                                                        <FaEdit className="text-blue-600 text-sm" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteSkill(idx)}
-                                                        className="w-6 h-6 bg-red-500/20 rounded flex items-center justify-center hover:bg-red-500/30 transition-colors"
+                                                        className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center hover:bg-red-200 transition-colors"
                                                     >
-                                                        <FaTimes className="text-red-400 text-xs" />
+                                                        <FaTimes className="text-red-600 text-sm" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -699,9 +736,11 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                                     </div>
                                 ))
                             ) : (
-                                <div className="text-center py-8 text-gray-400">
-                                    <FaCode className="text-4xl mx-auto mb-4" />
-                                    <p>Aucune technologie ajoutée</p>
+                                <div className="text-center py-8">
+                                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <FaCode className="text-gray-400 text-2xl" />
+                                    </div>
+                                    <p className="text-gray-600">Aucune technologie ajoutée</p>
                                 </div>
                             )}
                         </div>
@@ -713,8 +752,10 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                 if (!projet.id) {
                     return (
                         <div className="text-center py-12">
-                            <FaStar className="text-gray-400 text-5xl mx-auto mb-4" />
-                            <p className="text-gray-400 text-lg mb-2">Les recommandations ne sont disponibles qu'après la création du projet</p>
+                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <FaStar className="text-gray-400 text-2xl" />
+                            </div>
+                            <p className="text-gray-600 text-lg mb-2">Les recommandations ne sont disponibles qu'après la création du projet</p>
                             <p className="text-gray-500 text-sm">Veuillez d'abord sauvegarder le projet et ajouter des technologies requises</p>
                         </div>
                     );
@@ -722,63 +763,129 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
 
                 return (
                     <div className="space-y-6">
-                        <h3 className="text-lg font-semibold text-white">Personnes recommandées</h3>
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-3">
+                                Personnes recommandées par compétence
+                                <button 
+                                    onClick={fetchRecommendations}
+                                    disabled={recommendationsLoading}
+                                    title="Actualiser les recommandations"
+                                    className={`p-1.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 transition-all ${recommendationsLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    <FaSync className={`${recommendationsLoading ? 'animate-spin' : ''}`} />
+                                </button>
+                            </h3>
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>Disponible</span>
+                                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span>Indisponible</span>
+                            </div>
+                        </div>
+
+                        {/* Capacity indicator */}
+                        {projet.nbrperson && (
+                            <div className={`flex items-center justify-between p-3 rounded-xl border text-sm font-medium ${assignedPersons.length >= projet.nbrperson
+                                ? 'bg-red-50 border-red-200 text-red-700'
+                                : 'bg-blue-50 border-blue-200 text-blue-700'
+                                }`}>
+                                <span>Capacité du projet</span>
+                                <span className="font-bold">{assignedPersons.length} / {projet.nbrperson} personnes assignées</span>
+                            </div>
+                        )}
+
                         <div className="space-y-3">
                             {recommendations.length > 0 ? (
-                                recommendations.map((person, idx) => (
-                                    <div key={idx} className="border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-colors">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-start gap-4 flex-1">
-                                                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                                    <FaUser className="text-white text-lg" />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <p className="text-white font-medium">{person.name} {person.firstname}</p>
-                                                        <div className="flex items-center gap-1 text-yellow-400">
-                                                            <FaStar className="text-sm" />
-                                                            <span className="text-sm font-semibold">{person.matching_score || person.score || 'N/A'}</span>
-                                                        </div>
+                                recommendations.map((person: any, idx: number) => {
+                                    const isAvailable = person.available === true || person.available === 't' || person.available === 1 || person.available === '1';
+                                    const isFull = projet.nbrperson ? assignedPersons.length >= projet.nbrperson : false;
+                                    const isAlreadyAssigned = assignedPersons.some((p: any) => Number(p.idperson) === Number(person.idperson));
+                                    const canAssign = isAvailable && !isFull && !isAlreadyAssigned;
+                                    return (
+                                        <div key={idx} className={`border rounded-xl p-4 transition-colors ${!isAvailable ? 'bg-red-50/50 border-red-200 opacity-80' :
+                                            isAlreadyAssigned ? 'bg-green-50 border-green-200' :
+                                                'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                                            }`}>
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="flex items-start gap-4 flex-1 min-w-0">
+                                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg bg-gradient-to-br ${!isAvailable ? 'from-red-400 to-red-500' :
+                                                        isAlreadyAssigned ? 'from-green-500 to-emerald-600' :
+                                                            'from-blue-500 to-indigo-600'
+                                                        }`}>
+                                                        <FaUser className="text-white text-lg" />
                                                     </div>
-                                                    <p className="text-gray-400 text-sm mb-2">{person.email}</p>
-
-                                                    {/* Display person's skills */}
-                                                    {person.skills && person.skills.length > 0 ? (
-                                                        <div className="mt-2">
-                                                            <p className="text-gray-500 text-xs mb-1.5">Compétences:</p>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                            <p className="text-gray-900 font-semibold">{person.name} {person.firstname}</p>
+                                                            {/* Score badge */}
+                                                            <div className="flex items-center gap-1 text-yellow-600 bg-yellow-50 border border-yellow-200 px-2 py-0.5 rounded-lg">
+                                                                <FaStar className="text-xs" />
+                                                                <span className="text-xs font-bold">{Number(person.matching_score || 0).toFixed(1)}/10</span>
+                                                            </div>
+                                                            {/* Availability badge */}
+                                                            {!isAvailable && (
+                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-semibold">
+                                                                    Indisponible – déjà sur un projet en cours
+                                                                </span>
+                                                            )}
+                                                            {isAlreadyAssigned && (
+                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 border border-green-200 rounded-lg text-xs font-semibold">
+                                                                    Assigné
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-gray-500 text-sm mb-2">{person.email}</p>
+                                                        {/* Skills chips */}
+                                                        {person.skills && person.skills.length > 0 && (
                                                             <div className="flex flex-wrap gap-1.5">
                                                                 {person.skills.map((skill: any, skillIdx: number) => (
                                                                     <span
                                                                         key={skillIdx}
-                                                                        className="inline-flex items-center gap-1 px-2 py-1 bg-gray-700/50 text-gray-300 rounded text-xs"
+                                                                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs border font-medium ${skill.is_required
+                                                                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                                                            : 'bg-gray-100 text-gray-600 border-gray-200'
+                                                                            }`}
                                                                         title={`${skill.skill_name}: ${skill.noteskill}/10`}
                                                                     >
-                                                                        <FaCode className="text-blue-400 text-xs" />
+                                                                        <FaCode className="text-xs" />
                                                                         {skill.skill_name}
-                                                                        <span className="text-yellow-400 font-semibold">{skill.noteskill}</span>
+                                                                        <span className="font-bold">{skill.noteskill}</span>
                                                                     </span>
                                                                 ))}
                                                             </div>
-                                                        </div>
-                                                    ) : (
-                                                        <p className="text-gray-500 text-xs mt-2">Aucune compétence enregistrée</p>
-                                                    )}
+                                                        )}
+                                                    </div>
                                                 </div>
+                                                {/* Assign button */}
+                                                {isAlreadyAssigned ? (
+                                                    <button
+                                                        onClick={() => handleUnassignPerson(Number(person.idperson))}
+                                                        className="px-3 py-2 bg-red-100 text-red-700 border border-red-200 rounded-xl hover:bg-red-200 text-xs font-semibold transition-all flex-shrink-0"
+                                                    >
+                                                        Désassigner
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => canAssign && handleAssignPerson(Number(person.idperson))}
+                                                        disabled={!canAssign}
+                                                        title={!isAvailable ? 'Cette personne est déjà sur un projet en cours' : isFull ? 'Le projet a atteint sa capacité maximale' : 'Assigner cette personne'}
+                                                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex-shrink-0 ${canAssign
+                                                            ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25 cursor-pointer'
+                                                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                                            }`}
+                                                    >
+                                                        {!isAvailable ? 'Indisponible' : isFull ? 'Complet' : 'Assigner'}
+                                                    </button>
+                                                )}
                                             </div>
-                                            <button
-                                                onClick={() => handleAssignPerson(person.idperson)}
-                                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors flex-shrink-0"
-                                            >
-                                                Assigner
-                                            </button>
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             ) : (
-                                <div className="text-center py-12 border border-gray-700 rounded-lg">
-                                    <FaStar className="text-gray-400 text-4xl mx-auto mb-4" />
-                                    <p className="text-gray-400">Aucune recommandation disponible</p>
-                                    <p className="text-gray-500 text-sm mt-2">Ajoutez des technologies au projet pour obtenir des recommandations</p>
+                                <div className="text-center py-12 bg-gray-50 border border-gray-200 rounded-xl">
+                                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <FaStar className="text-gray-400 text-2xl" />
+                                    </div>
+                                    <p className="text-gray-600">Aucune personne ne correspond aux compétences requises</p>
+                                    <p className="text-gray-500 text-sm mt-2">Ajoutez des technologies au projet pour obtenir des recommandations triées par niveau</p>
                                 </div>
                             )}
                         </div>
@@ -790,8 +897,10 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                 if (!projet.id) {
                     return (
                         <div className="text-center py-12">
-                            <FaUserFriends className="text-gray-400 text-5xl mx-auto mb-4" />
-                            <p className="text-gray-400 text-lg mb-2">Les personnes ne peuvent être assignées qu'après la création du projet</p>
+                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <FaUserFriends className="text-gray-400 text-2xl" />
+                            </div>
+                            <p className="text-gray-600 text-lg mb-2">Les personnes ne peuvent être assignées qu'après la création du projet</p>
                             <p className="text-gray-500 text-sm">Veuillez d'abord sauvegarder le projet</p>
                         </div>
                     );
@@ -799,27 +908,60 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
 
                 return (
                     <div className="space-y-6">
-                        <h3 className="text-lg font-semibold text-white">Personnes assignées</h3>
-                        <div className="space-y-2">
-                            {assignedPersons.map((person, idx) => (
-                                <div key={idx} className="flex items-center justify-between p-4 border border-gray-700 rounded-lg">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                                            <FaUser className="text-white" />
-                                        </div>
-                                        <div>
-                                            <p className="text-white font-medium">{person.name} {person.firstname}</p>
-                                            <p className="text-gray-400 text-sm">{person.email}</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => handleUnassignPerson(Number(person.idperson))}
-                                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-                                    >
-                                        Désassigner
-                                    </button>
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-gray-900">Personnes assignées</h3>
+                            {/* Capacity indicator */}
+                            {projet.nbrperson && (
+                                <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border ${assignedPersons.length >= projet.nbrperson
+                                    ? 'bg-red-50 border-red-200 text-red-700'
+                                    : assignedPersons.length >= projet.nbrperson * 0.8
+                                        ? 'bg-yellow-50 border-yellow-200 text-yellow-700'
+                                        : 'bg-green-50 border-green-200 text-green-700'
+                                    }`}>
+                                    <FaUsers className="text-lg" />
+                                    <span>{assignedPersons.length} / {projet.nbrperson} personnes</span>
+                                    {assignedPersons.length >= projet.nbrperson && <span className="text-xs">(complet)</span>}
                                 </div>
-                            ))}
+                            )}
+                        </div>
+                        {/* Capacity progress bar */}
+                        {projet.nbrperson && projet.nbrperson > 0 && (
+                            <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                    className={`h-full rounded-full transition-all duration-500 ${assignedPersons.length >= projet.nbrperson ? 'bg-red-500' :
+                                        assignedPersons.length >= projet.nbrperson * 0.8 ? 'bg-yellow-500' : 'bg-green-500'
+                                        }`}
+                                    style={{ width: `${Math.min((assignedPersons.length / projet.nbrperson) * 100, 100)}%` }}
+                                />
+                            </div>
+                        )}
+                        <div className="space-y-3">
+                            {assignedPersons.length === 0 ? (
+                                <div className="text-center py-8 bg-gray-50 border border-gray-200 rounded-xl">
+                                    <FaUsers className="text-gray-400 text-2xl mx-auto mb-2" />
+                                    <p className="text-gray-500 text-sm">Aucune personne assignée — utilisez l'onglet Recommandations pour assigner</p>
+                                </div>
+                            ) : (
+                                assignedPersons.map((person: any, idx: number) => (
+                                    <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                                                <FaUser className="text-white text-sm" />
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-900 font-medium">{person.name} {person.firstname}</p>
+                                                <p className="text-gray-600 text-sm">{person.email}</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => handleUnassignPerson(Number(person.idperson))}
+                                            className="px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-xl hover:from-red-700 hover:to-pink-700 text-sm font-medium transition-all duration-300 shadow-lg shadow-red-500/25"
+                                        >
+                                            Désassigner
+                                        </button>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
                 );
@@ -827,17 +969,17 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
             case 'file':
                 return (
                     <div className="space-y-6">
-                        <h3 className="text-lg font-semibold text-white">Fichiers du projet</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">Fichiers du projet</h3>
                         {projet.file ? (
-                            <div className="flex flex-col items-center justify-center p-8 border border-gray-700 rounded-lg">
-                                <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
+                            <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+                                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mb-4 shadow-lg">
                                     <FaFileDownload className="text-white text-2xl" />
                                 </div>
                                 <a
                                     href={`${BASE_URL}/projects/download/${projet.file}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2"
+                                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 flex items-center gap-2 shadow-lg shadow-blue-500/25"
                                 >
                                     <FaDownload />
                                     Télécharger le fichier
@@ -845,8 +987,10 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                             </div>
                         ) : (
                             <div className="text-center py-8">
-                                <FaFile className="text-gray-400 text-4xl mx-auto mb-4" />
-                                <p className="text-gray-400">Aucun fichier joint</p>
+                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <FaFile className="text-gray-400 text-2xl" />
+                                </div>
+                                <p className="text-gray-600">Aucun fichier joint</p>
                             </div>
                         )}
                     </div>
@@ -858,17 +1002,19 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
     };
 
     return (
-        <div className="rounded-2xl shadow-2xl animate-fade-in">
-            <div className="border-b border-gray-700 p-6">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <FaProjectDiagram className="text-blue-400" />
+        <div className="bg-white/80 backdrop-blur-xl border border-white/50 rounded-xl shadow-lg animate-fade-in">
+            <div className="border-b border-gray-200 p-6">
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <FaProjectDiagram className="text-blue-600 text-sm" />
+                    </div>
                     {actionName} un projet
                 </h2>
             </div>
 
             {/* Tabs Navigation */}
-            <div className="border-b border-gray-700">
-                <nav className="flex space-x-1 p-4">
+            <div className="border-b border-gray-200">
+                <nav className="flex space-x-1 p-4 overflow-x-auto no-scrollbar">
                     {tabs.map((tab, index) => {
                         const IconComponent = tab.icon;
                         const isBasicTab = tab.ref === 'basic';
@@ -879,17 +1025,17 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
                                 key={tab.ref}
                                 onClick={() => !isDisabled && setActiveTab(index)}
                                 disabled={isDisabled}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${activeTab === index
-                                    ? 'bg-blue-600 text-white'
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${activeTab === index
+                                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
                                     : isDisabled
-                                        ? 'text-gray-600 cursor-not-allowed opacity-50'
-                                        : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                                        ? 'text-gray-400 cursor-not-allowed opacity-50 bg-gray-100'
+                                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                                     }`}
                                 title={isDisabled ? 'Veuillez d\'abord créer le projet' : ''}
                             >
-                                <IconComponent className="w-4 h-4" />
+                                <IconComponent className="w-4 h-4 flex-shrink-0" />
                                 <span>{tab.name}</span>
-                                {isDisabled && <span className="text-xs">🔒</span>}
+                                {isDisabled && <span className="text-xs"></span>}
                             </button>
                         );
                     })}
@@ -902,27 +1048,27 @@ const ProjetCreation = ({ reloadTrigger, toUpdateData, isUpdate = false }: Proje
             </div>
 
             {/* Action Buttons */}
-            <div className="border-t border-gray-700 p-6">
+            <div className="border-t border-gray-200 p-6">
                 <div className="flex gap-4 justify-end">
                     <button
                         onClick={() => reloadTrigger()}
-                        className="px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors"
+                        className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium"
                     >
                         Annuler
                     </button>
                     <button
                         onClick={submitProjet}
                         disabled={submitting}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                        className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 font-medium flex items-center gap-2 shadow-lg shadow-blue-500/25 disabled:opacity-50"
                     >
                         {submitting ? (
                             <>
                                 <FaSpinner className="animate-spin" />
-                                En cours...
+                                Enregistrement...
                             </>
                         ) : (
                             <>
-                                <FaPlus />
+                                <FaSave />
                                 {actionName}
                             </>
                         )}

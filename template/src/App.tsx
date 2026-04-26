@@ -4,23 +4,14 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import Loader from './common/Loader';
 import PageTitle from './components/PageTitle';
 import SignIn from './pages/Authentication/SignIn';
-import SignUp from './pages/Authentication/SignUp';
-import Calendar from './pages/Calendar';
-import Chart from './pages/Chart';
 import ECommerce from './pages/Dashboard/ECommerce';
-import FormElements from './pages/Form/FormElements';
-import FormLayout from './pages/Form/FormLayout';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import Tables from './pages/Tables';
-import Alerts from './pages/UiElements/Alerts';
-import Buttons from './pages/UiElements/Buttons';
 import DefaultLayout from './layout/DefaultLayout';
-import SkillCreation from './pages/Skills/SkillCreation';
 import Skills from './pages/Skills/Index';
 import Projects from './pages/Projets/Index';
-import FicheProjetWrapper from './pages/Projets/FicheProjetWrapper';
 import Person from './pages/Person/Index';
+
+import Calendar from './pages/Calendar';
+import Settings from './pages/Settings';
 import PersonSkills from './pages/Person/PersonSkills';
 import UnifiedLists from './pages/Lists/UnifiedLists';
 
@@ -39,21 +30,17 @@ function App() {
   return loading ? (
     <Loader />
   ) : (
-
     <Routes>
-
       <Route
         index
         element={
           <>
-            <PageTitle title="eCommerce Dashboard | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-            {/* <ECommerce /> */}
+            <PageTitle title="TalentIA | Login" />
             <SignIn />
           </>
         }
       />
 
-      {/* Anaty template */}
       <Route
         element={<DefaultLayout />}
       >
@@ -61,17 +48,8 @@ function App() {
           path='/dashboard'
           element={
             <>
-              <PageTitle title="Dashboard | Overview " />
+              <PageTitle title="Dashboard | Overview" />
               <ECommerce />
-            </>
-          }
-        />
-        <Route
-          path='/lists'
-          element={
-            <>
-              <PageTitle title="Lists | Unified Management " />
-              <UnifiedLists />
             </>
           }
         />
@@ -79,17 +57,8 @@ function App() {
           path='/person'
           element={
             <>
-              <PageTitle title="Person | Overview " />
+              <PageTitle title="Person | Overview" />
               <Person />
-            </>
-          }
-        />
-        <Route
-          path='/person-skills'
-          element={
-            <>
-              <PageTitle title="Person Skills | Management " />
-              <PersonSkills />
             </>
           }
         />
@@ -97,17 +66,8 @@ function App() {
           path='/skill'
           element={
             <>
-              <PageTitle title="Skills | Overview " />
+              <PageTitle title="Skills | Overview" />
               <Skills />
-            </>
-          }
-        />
-        <Route
-          path='/fiche/:id'
-          element={
-            <>
-              <PageTitle title="Projet | Fiche " />
-              <FicheProjetWrapper />
             </>
           }
         />
@@ -115,134 +75,50 @@ function App() {
           path='/project'
           element={
             <>
-              <PageTitle title="Projects | Overview " />
+              <PageTitle title="Projects | Overview" />
               <Projects />
             </>
           }
         />
+
         <Route
-          path="/calendar"
+          path='/calendar'
           element={
             <>
-              <PageTitle title="Calendar | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+              <PageTitle title="Calendar | Overview" />
               <Calendar />
             </>
           }
         />
         <Route
-          path="/profile"
+          path='/settings'
           element={
             <>
-              <PageTitle title="Profile | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-              <Profile />
-            </>
-          }
-        />
-        <Route
-          path="/forms/form-elements"
-          element={
-            <>
-              <PageTitle title="Form Elements | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-              <FormElements />
-            </>
-          }
-        />
-        <Route
-          path="/forms/form-layout"
-          element={
-            <>
-              <PageTitle title="Form Layout | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-              <FormLayout />
-            </>
-          }
-        />
-        <Route
-          path="/tables"
-          element={
-            <>
-              <PageTitle title="Tables | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-              <Tables />
-            </>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <>
-              <PageTitle title="Settings | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+              <PageTitle title="Settings | Overview" />
               <Settings />
             </>
           }
         />
         <Route
-          path="/chart"
+          path='/person-skills'
           element={
             <>
-              <PageTitle title="Basic Chart | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-              <Chart />
-            </>
-          }
-        />
-        {/* <Route
-          path="/ui/alerts"
-          element={
-            <>
-              <PageTitle title="Alerts | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-              <Alerts />
-            </>
-          }
-        /> */}
-        <Route
-          path="/ui/buttons"
-          element={
-            <>
-              <PageTitle title="Buttons | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-              <Buttons />
+              <PageTitle title="Person Skills | Overview" />
+              <PersonSkills />
             </>
           }
         />
         <Route
-          path="/auth/signin"
+          path='/lists'
           element={
             <>
-              <PageTitle title="Signin | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-              <SignIn />
+              <PageTitle title="Lists | Overview" />
+              <UnifiedLists />
             </>
           }
         />
-        <Route
-          path="/auth/signup"
-          element={
-            <>
-              <PageTitle title="Signup | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-              <SignUp />
-            </>
-          }
-        />
-
       </Route>
-
-
     </Routes>
-
-
-
-
-    // <DefaultLayout>
-    //   <Routes>
-    //     <Route
-    //       index
-    //       element={
-    //         <>
-    //           <PageTitle title="eCommerce Dashboard | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-    //           {/* <ECommerce /> */}
-    //           <SignIn />
-    //         </>
-    //       }
-    //     />
-
-    //   </Routes>
-    // </DefaultLayout>
   );
 }
 

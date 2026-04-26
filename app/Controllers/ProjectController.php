@@ -77,13 +77,27 @@ class ProjectController extends Controller
                     $file->move(WRITEPATH . 'uploads', $newName);
                 }
 
+                $rawDateBegin = $isJsonRequest ? $this->request->getJSON()->datebegin : $this->request->getPost('datebegin');
+                $rawDateEnd = $isJsonRequest ? $this->request->getJSON()->dateend : $this->request->getPost('dateend');
+                
+                // --- Auto-status calculation ---
+                $today = date('Y-m-d');
+                $status = 'PLANIFIÉ';
+                if ($rawDateEnd < $today) {
+                    $status = 'TERMINÉ';
+                } elseif ($rawDateBegin <= $today) {
+                    $status = 'EN_COURS';
+                }
+                // -------------------------------
+
                 $data = [
                     'name' => $isJsonRequest ? $this->request->getJSON()->name : $this->request->getPost('name'),
                     'description' => $isJsonRequest ? $this->request->getJSON()->description : $this->request->getPost('description'),
-                    'datebegin' => $isJsonRequest ? $this->request->getJSON()->datebegin : $this->request->getPost('datebegin'),
-                    'dateend' => $isJsonRequest ? $this->request->getJSON()->dateend : $this->request->getPost('dateend'),
+                    'datebegin' => $rawDateBegin,
+                    'dateend' => $rawDateEnd,
                     'nbrperson' => $isJsonRequest ? $this->request->getJSON()->nbrperson : $this->request->getPost('nbrperson'),
                     'remark' => $isJsonRequest ? $this->request->getJSON()->remark : $this->request->getPost('remark'),
+                    'etat' => $status,
                     'file' => $newName,
                 ];
 
@@ -170,6 +184,17 @@ class ProjectController extends Controller
 
             try {
                 $projectModel = new ProjectModel();
+                
+                // --- Auto-status calculation ---
+                $today = date('Y-m-d');
+                $status = 'PLANIFIÉ';
+                if ($input['dateend'] < $today) {
+                    $status = 'TERMINÉ';
+                } elseif ($input['datebegin'] <= $today) {
+                    $status = 'EN_COURS';
+                }
+                // -------------------------------
+
                 $data = [
                     'name' => $input['name'],
                     'description' => $input['description'],
@@ -177,6 +202,7 @@ class ProjectController extends Controller
                     'dateend' => $input['dateend'],
                     'nbrperson' => $input['nbrperson'],
                     'remark' => $input['remark'],
+                    'etat' => $status,
                 ];
 
                 $projectModel->update($id, $data);
@@ -239,13 +265,27 @@ class ProjectController extends Controller
                     $file->move(WRITEPATH . 'uploads', $newName);
                 }
 
+                $rawDateBegin = $this->request->getPost('datebegin');
+                $rawDateEnd = $this->request->getPost('dateend');
+
+                // --- Auto-status calculation ---
+                $today = date('Y-m-d');
+                $status = 'PLANIFIÉ';
+                if ($rawDateEnd < $today) {
+                    $status = 'TERMINÉ';
+                } elseif ($rawDateBegin <= $today) {
+                    $status = 'EN_COURS';
+                }
+                // -------------------------------
+
                 $data = [
                     'name' => $this->request->getPost('name'),
                     'description' => $this->request->getPost('description'),
-                    'datebegin' => $this->request->getPost('datebegin'),
-                    'dateend' => $this->request->getPost('dateend'),
+                    'datebegin' => $rawDateBegin,
+                    'dateend' => $rawDateEnd,
                     'nbrperson' => $this->request->getPost('nbrperson'),
                     'remark' => $this->request->getPost('remark'),
+                    'etat' => $status,
                     'file' => $newName,
                 ];
 
@@ -355,4 +395,59 @@ class ProjectController extends Controller
     //     return $this->respond(['skills' => $projectData], 200);
     // }
 
+    public function startNow($id)
+    {
+        $projectModel = new ProjectModel();
+        $project = $projectModel->find($id);
+        
+        if (!$project) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'Projet non trouvé']);
+        }
+
+        $today = date('Y-m-d');
+        $data = [
+            'datebegin' => $today,
+            'etat' => 'EN_COURS'
+        ];
+
+        try {
+            $projectModel->update($id, $data);
+            return $this->response->setStatusCode(200)->setJSON([
+                'success' => true, 
+                'message' => 'Projet démarré immédiatement',
+                'new_status' => 'EN_COURS'
+            ]);
+        } catch (\Exception $e) {
+            return $this->response->setStatusCode(500)->setJSON(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function terminateNow($id)
+    {
+        $projectModel = new ProjectModel();
+        $project = $projectModel->find($id);
+
+        if (!$project) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'Projet non trouvé']);
+        }
+
+        // To force termination today while respecting the trigger (which uses dateEnd < CURRENT_DATE for TERMINÉ)
+        // we set dateEnd to yesterday.
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+        $data = [
+            'dateend' => $yesterday,
+            'etat' => 'TERMINÉ'
+        ];
+
+        try {
+            $projectModel->update($id, $data);
+            return $this->response->setStatusCode(200)->setJSON([
+                'success' => true, 
+                'message' => 'Projet terminé immédiatement',
+                'new_status' => 'TERMINÉ'
+            ]);
+        } catch (\Exception $e) {
+            return $this->response->setStatusCode(500)->setJSON(['error' => $e->getMessage()]);
+        }
+    }
 }

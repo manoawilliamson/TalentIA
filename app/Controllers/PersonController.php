@@ -152,4 +152,50 @@ class PersonController extends ResourceController
         $result = $v_PersonStatsModel->getCollabAnalyse();
         return $this->response->setJSON(['data' => $result]);
     }
+
+    public function getAvailabilityList()
+    {
+        $db = \Config\Database::connect();
+        $sql = "
+            SELECT 
+                p.id,
+                p.name,
+                p.firstname,
+                p.email,
+                (
+                    SELECT COUNT(*) 
+                    FROM personproject pp 
+                    JOIN project pr ON pr.id = pp.idproject
+                    WHERE pp.idperson = p.id AND pr.etat = 'EN_COURS'
+                ) as active_projects_count
+            FROM person p
+            ORDER BY p.name ASC
+        ";
+        $results = $db->query($sql)->getResultArray();
+        
+        foreach ($results as &$r) {
+            $r['available'] = (int)$r['active_projects_count'] < 2;
+        }
+
+        return $this->respond($results);
+    }
+
+    public function getPersonProjects($id)
+    {
+        $db = \Config\Database::connect();
+        $sql = "
+            SELECT 
+                pr.id,
+                pr.name,
+                pr.etat,
+                pr.datebegin,
+                pr.dateend
+            FROM personproject pp
+            JOIN project pr ON pr.id = pp.idproject
+            WHERE pp.idperson = ?
+            ORDER BY pr.datebegin DESC
+        ";
+        $results = $db->query($sql, [$id])->getResultArray();
+        return $this->respond($results);
+    }
 }

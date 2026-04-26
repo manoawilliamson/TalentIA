@@ -126,7 +126,8 @@ $routes->group('api', function ($routes) {
         $routes->get('nbrproject', 'ProjectController::count'); 
         $routes->get('count-by-period/(:segment)', 'ProjectController::countByPeriod/$1'); // ex: month, week, year
         $routes->get('count-by-period', 'ProjectController::countByPeriod'); // default month
-
+        $routes->put('(:num)/start', 'ProjectController::startNow/$1');
+        $routes->put('(:num)/terminate', 'ProjectController::terminateNow/$1');
     });
 
     $routes->group('projectskills', function ($routes) {
@@ -145,7 +146,8 @@ $routes->group('api', function ($routes) {
         $routes->delete('(:num)', 'PersonController::delete/$1'); // Suppression d'une personne
         $routes->get('nbrperson', 'PersonController::count'); // Suppression d'une personne
         $routes->get('stat', 'PersonController::collabStat'); 
-
+        $routes->get('availability', 'PersonController::getAvailabilityList');
+        $routes->get('(:num)/projects', 'PersonController::getPersonProjects/$1');
     });
     $routes->group('personskills', function ($routes) {
         $routes->get('/', 'PersonSkillsController::index');            // Liste toutes les personskills
@@ -178,6 +180,9 @@ $routes->group('api', function ($routes) {
         $routes->get('person/(:num)', 'RecommendationController::getForPerson/$1');
         $routes->get('project-alerts/(:num)', 'RecommendationController::getProjectAlerts/$1');
     });
+
+    $routes->get('test', function() { return "API OK"; });
+    $routes->get('dashboard/statistics', 'DashboardController::statistics');
 });
 
 // A simple route for testing
