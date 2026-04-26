@@ -26,8 +26,10 @@ class Auth extends ResourceController
     {
         if ($this->request->getMethod(true) === 'POST') {
             // Check if it's an API request (JSON)
-            $isApi = $this->request->getHeaderLine('Content-Type') === 'application/json' ||
-                     strpos($this->request->getHeaderLine('Accept'), 'application/json') !== false;
+            $contentType = $this->request->getHeaderLine('Content-Type');
+            $accept = $this->request->getHeaderLine('Accept');
+            $isApi = strpos($contentType, 'application/json') !== false ||
+                     strpos($accept, 'application/json') !== false;
 
 
 
@@ -63,13 +65,18 @@ class Auth extends ResourceController
             try {
                 $userModel = new UserModel();
                 $user = $userModel->get_user_by_mail($email);
-                if ($user && $user['password'] === $password) {
+                if ($user && password_verify($password, $user['password'])) {
                     $this->setUserSession($user);
                     if ($isApi) {
                         return $this->response->setJSON([
                             'status' => 'success',
                             'message' => 'Login successful',
-                            'user' => $user
+                            'user' => [
+                                'id' => $user['id'],
+                                'name' => $user['name'],
+                                'email' => $user['email'],
+                                'role' => $user['role']
+                            ]
                         ])->setStatusCode(200);
                     } else {
                         return redirect()->to(base_url('/dashboard'));
